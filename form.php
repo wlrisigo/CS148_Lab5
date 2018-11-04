@@ -115,12 +115,12 @@ if (isset($_POST["btnSubmit"])) {
         $errorMsg[] = "Invalid Date Entry";
         $dateError = true;
     }
-    if($_answer = ""){
-         $errorMsg[] = "Please Select a Trail";
+    if($xHiker = ""){
+         $errorMsg[] = "Please select a Hiker";
          $trailError = true;
     }
-    
-  
+
+
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //
     print PHP_EOL . '<!-- SECTION: 2d Process Form - Passed Validation -->' . PHP_EOL;

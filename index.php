@@ -35,6 +35,10 @@ if (is_array($records)) {
     }
 }
 
+if($isAdmin){
+    print '<a href= "https://wrisigo.w3.uvm.edu/cs148/dev-lab5/form.php"> EDIT </a>';
+}
+
 
 print '</article>';
 include "footer.php";
