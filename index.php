@@ -12,7 +12,7 @@ print '<article>';
 print '<h2>A Hikers Home</h2>';
 $records = '';
 
-$query = 'SELECT fldFirstName, fldLastName FROM tblHikers';
+$query = 'SELECT fldTrailName, fldRating FROM tblTrails';
 
 // NOTE: The full method call would be:
 //           $thisDatabaseReader->querySecurityOk($query, 0, 0, 0, 0, 0)
@@ -28,10 +28,10 @@ if (DEBUG) {
     print '</pre></p>';
 }
 
-print '<h2 class="alternateRows">Meet the Hikers!</h2>';
+print '<h2 class="alternateRows">Meet the Trails!</h2>';
 if (is_array($records)) {
     foreach ($records as $record) {
-        print '<p>' . $record['fldFirstName'] . ' ' . $record['fldLastName'] . '</p>';
+        print '<p>' . $record['fldTrailName'] . ' <b>Rating:  </b>' . $record['fldRating'] . '</p>';
     }
 }
 

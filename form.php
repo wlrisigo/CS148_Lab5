@@ -14,9 +14,9 @@ print  PHP_EOL . '<!-- SECTION: 1a. debugging setup -->' . PHP_EOL;
 // display it. when you first come to the form it is empty. when you submit the
 // form it displays the contents of the post array.
 // if ($debug){ 
-    print '<p>Post Array:</p><pre>';
-    print_r($_POST);
-    print '</pre>';
+//    print '<p>Post Array:</p><pre>';
+//    print_r($_POST);
+//    print '</pre>';
    
     
 // }
@@ -107,6 +107,11 @@ if (isset($_POST["btnSubmit"])) {
     // order that the elements appear on your form so that the error messages
     // will be in the order they appear. errorMsg will be displayed on the form
     // see section 3b. The error flag ($emailERROR) will be used in section 3c.
+
+    if($xHiker = ""){
+        $errorMsg[] = "Please select a Hiker";
+        $hikerERROR = true;
+    }
     if($date == ""){
         $errorMsg[] = "Please Enter the Date";
         $dateError = true;
@@ -115,10 +120,13 @@ if (isset($_POST["btnSubmit"])) {
         $errorMsg[] = "Invalid Date Entry";
         $dateError = true;
     }
-    if($xHiker = ""){
-         $errorMsg[] = "Please select a Hiker";
-         $trailError = true;
+
+    if(empty($trailClicked)){
+        $errorMsg[] = "Please select a Mountain";
+        $trailERROR = true;
     }
+
+
 
 
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -137,8 +145,9 @@ if (isset($_POST["btnSubmit"])) {
         $dataRecord = array();
       
          $dataRecord[] = $xHiker;
-        $dataRecord[] = $trailClicked;
         $dataRecord[] = $date;
+        $dataRecord[] = $trailClicked;
+
         
         
         try{
@@ -292,7 +301,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                 <fieldset class = "contact">
                     <p>
                         <label class="required" for="txtDate">Date</label>  
-                        <input 
+                        <input
                                <?php //What type of data type is date? ?>
                                 <?php if ($dateERROR) 
                                     print 'class="mistake"'; ?>
@@ -326,10 +335,11 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
             <?php
             $x = 0;
              foreach ($mountains as $mountain) {
+
+
+                print '<input type = "radio"';
                  if ($trailERROR)
                      print 'class="mistake"';
-                  
-                print '<input type = "radio"';
                 print 'value="' . $mountain["pmkTrailsId"] . '" name="Trails" >' . $mountain["fldTrailName"];
              
                 
