@@ -240,7 +240,7 @@ if (isset($_POST["btnSubmit"])) {
 
  <fieldset class = "contact">
     <p>
-        <label class="required" for="txtTrailName">First Name</label>
+        <label class="required" for="txtTrailName">Trail Name</label>
         <input autofocus
             <?php if ($trailNameERROR)
                 print 'class="mistake"'; ?>
@@ -256,7 +256,7 @@ if (isset($_POST["btnSubmit"])) {
     </p>
 
     <p>
-        <label class="required" for="intTotalDistance">Distance in Miles</label>
+        <label class="required" for="intTotalDistance">Distance (Miles)</label>
         <input
             <?php if ($totalDistanceERROR)
                 print 'class="mistake"'; ?>
@@ -264,7 +264,6 @@ if (isset($_POST["btnSubmit"])) {
             maxlength="45"
             name="intTotalDistance"
             onfocus="this.select()"
-            placeholder="Distance in miles"
             tabindex="110"
             type="number"
             min = "0"
@@ -274,7 +273,7 @@ if (isset($_POST["btnSubmit"])) {
 
 
     <p>
-        <label class="required" for="txtHikingTime">Hiking Duration</label>
+        <label class="required" for="txtHikingTime">Hiking Duration (hh:mm:ss)</label>
         <input
             <?php if ($hikingTimeERROR)
                 print 'class="mistake"'; ?>
@@ -289,15 +288,13 @@ if (isset($_POST["btnSubmit"])) {
     </p>
 
      <p>
-         <label class="required" for="txtVerticalRise">Height</label>
+         <label class="required" for="txtVerticalRise">Height (ft)</label>
          <input
              <?php if ($verticalRiseERROR)
                  print 'class="mistake"'; ?>
              id="txtVerticalRise"
              name="txtVerticalRise"
-             width=""
              onfocus="this.select()"
-             placeholder="Height: (ft)"
              tabindex="120"
              type="number"
              min = "0"
