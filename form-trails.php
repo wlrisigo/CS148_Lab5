@@ -1,5 +1,5 @@
 <?php
-
+include 'top.php';
 print PHP_EOL . '<!-- SECTION: 1 Initialize variables -->' . PHP_EOL;
 $update = false;
 
@@ -83,7 +83,7 @@ if (isset($_POST["btnSubmit"])) {
 
     $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
 
-    $Rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
+    $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
 
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
 
@@ -271,7 +271,6 @@ if (isset($_POST["btnSubmit"])) {
         >
     </p>
 
-
     <p>
         <label class="required" for="txtHikingTime">Hiking Duration (hh:mm:ss)</label>
         <input
@@ -279,11 +278,9 @@ if (isset($_POST["btnSubmit"])) {
                 print 'class="mistake"'; ?>
             id="txtHikingTime"
             name="txtHikingTime"
-            onfocus="this.select()"
-            placeholder="Time Estimate: (hh:mm:ss)"
-            tabindex="120"
+            step = "1"
             type="time"
-            value="<?php print $hikingTime; ?>"
+            value="<?php print date("H:i:s", $hikingTime); ?>"
         >
     </p>
 
@@ -341,6 +338,7 @@ if (isset($_POST["btnSubmit"])) {
              value="Strenuous"
          > <label for="strenuous">Strenuous</label>
      </p>
+
 </fieldset>
 
 
