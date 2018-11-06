@@ -271,7 +271,6 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 <form action = "<?php print PHP_SELF; ?>"
           id = "frmRegister"
           method = "post">
-
       <fieldset>
         <h2>List of Hikers</h2>
 
@@ -282,7 +281,6 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
             <select id="lstHikers"
                     name="selectedHiker"
                     tabindex = "300">
-                
             <?php
              foreach ($hikers as $hiker) {
 
@@ -294,8 +292,6 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
               }
       ?>
             </select></label>
-                      
-
         </fieldset>
     
                 <fieldset class = "contact">
@@ -308,7 +304,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                                 id="txtDate"
                                 name="txtDate"                              
                                 tabindex="100"
-                                type="date" 
+                                type="date"
                                 value ="<?php print $date; ?>"
                         >                    
                     </p>
@@ -333,23 +329,17 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                 <fieldset>
         <h2>Chose Mountain</h2>
             <?php
-            $x = 0;
              foreach ($mountains as $mountain) {
-
-
                 print '<input type = "radio"';
                  if ($trailERROR)
                      print 'class="mistake"';
                 print 'value="' . $mountain["pmkTrailsId"] . '" name="Trails" >' . $mountain["fldTrailName"];
-             
-                
                 print '<br>';
               }
       ?>
                 <script> 
                 var allRadios = document.getElementsByName('Trails');
                 var booRadio;
-                var x = 0;
                 for(x = 0; x < allRadios.length; x++){
                   allRadios[x].onclick = function() {
                     if(booRadio == this){

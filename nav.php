@@ -11,10 +11,10 @@
         print '><a href="index.php">Home</a></li>';
        
         print '<li ';
-        if ($PATH_PARTS['filename'] == 'form') {
+        if ($PATH_PARTS['filename'] == ' form-hiker-trails') {
             print ' class="activePage" ';
         }
-        print '><a href="form.php">Form</a></li>';
+        print '><a href=" form-hiker-trails.php.">Form</a></li>';
         
         print '<li ';
         if ($PATH_PARTS['filename'] == 'tables') {
