@@ -55,15 +55,6 @@ section{
     width: 40%;  
 }
 
-
-
-input[type=time]::-webkit-clear-button {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    margin: 0;
-}
-
 /*------------------------   classes           ------------------------------ */
 
 p:nth-child(odd){

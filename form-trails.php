@@ -1,14 +1,16 @@
 <?php
 include 'top.php';
+
+
 print PHP_EOL . '<!-- SECTION: 1 Initialize variables -->' . PHP_EOL;
 $update = false;
 
 print PHP_EOL . '<!-- SECTION: 1a. debugging setup -->' . PHP_EOL;
-if (DEBUG) {
+//if (DEBUG) {
     print '<p>Post Array:</p><pre>';
     print_r($_POST);
     print '</pre>';
-}
+//}
 
 print PHP_EOL . '<!-- SECTION: 1b form variables -->' . PHP_EOL;
 
@@ -18,15 +20,14 @@ $totalDistance = "";
 $hikingTime = "";
 $verticalRise = "";
 $rating = "";
-
+$trials = [];
 // If the form is an update we need to intial the values from the table
 if (isset($_GET["id"])) {
-    $pmktrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
-
+    $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
     $query .= 'FROM tblTrails WHERE pmkTrailsId = ?';
 
-    $data = array($pmktrailsId);
+    $data = array($pmkTrailsId);
 
     if ($thisDatabaseReader->querySecurityOk($query, 1)) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
@@ -39,6 +40,8 @@ if (isset($_GET["id"])) {
     $verticalRise = $trails[0]["fldVerticalRide"];
     $rating = $trails[0]["fldRating"];
     }
+
+
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
 
 $trailNameERROR = false;
@@ -70,8 +73,8 @@ if (isset($_POST["btnSubmit"])) {
 
     print PHP_EOL . '<!-- SECTION: 2b Sanitize (clean) data  -->' . PHP_EOL;
 
-    $pmktrailsId = (int) htmlentities($_POST["hidtrailsId"], ENT_QUOTES, "UTF-8");
-    if ($pmktrailsId > 0) {
+    $pmkTrailsId = (int) htmlentities($_POST["hidtrailsId"], ENT_QUOTES, "UTF-8");
+    if ($pmkTrailsId > 0) {
         $update = true;
     }
 
@@ -79,13 +82,18 @@ if (isset($_POST["btnSubmit"])) {
 
     $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
 
-    $hikingTime = htmlentities($_POST["txtHikingTime"], ENT_QUOTES, "UTF-8");
+    $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
+    $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
+    $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
+
+    $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
 
     $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
 
     $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
 
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
+
 
     if ($trailName == "") {
         $errorMsg[] = "Please enter your first name";
@@ -96,24 +104,24 @@ if (isset($_POST["btnSubmit"])) {
     }
 
     if ($totalDistance == "") {
-        $errorMsg[] = "Enter your last name";
-        $totalDistanceERROR = true;
-    } elseif (!verifyAlphaNum($totalDistance)) {
-        $errorMsg[] = "Your last name appears to have extra character.";
+        $errorMsg[] = "Enter Distance";
         $totalDistanceERROR = true;
     }
 
-    if ($hikingTime == "") {
-        $errorMsg[] = "Enter the trail's hiking timed duration";
+    if(strlen($hikingTime) > 9 || strlen($hikingTime)<8){
+        $errorMsg[] = "Format must be HH:MM:SS";
         $hikingTimeERROR = true;
-    }// should check to make sure its the correct date format
+    }elseif($hikingTime == "00:00:00"){
+        $errorMsg[] = "Must be more than no time";
+    }
+
 
     if($verticalRise == ""){
         $errorMsg[] = "Enter the trail's Height";
         $verticalRiseERROR = true;
     }
     if(rating == ""){
-        $errorMsg[] = "Enter the trail's Height";
+        $errorMsg[] = "Enter the trail's Difficulty ";
         $ratingERROR = true;
     }
 
@@ -140,9 +148,9 @@ if (isset($_POST["btnSubmit"])) {
     $thisDatabaseWriter->db->beginTransaction();
 
     if ($update) {
-        $query = 'UPDATE tbltrails SET ';
+        $query = 'UPDATE tblTrails SET ';
     } else {
-        $query = 'INSERT INTO tbltrails SET ';
+        $query = 'INSERT INTO tblTrails SET ';
     }
 
     $query .= 'fldTrailName = ?, ';
@@ -157,13 +165,14 @@ if (isset($_POST["btnSubmit"])) {
     }
 
     if ($update) {
-        $query .= 'WHERE pmktrailsId = ?';
-        $data[] = $pmktrailsId;
+        $query .= 'WHERE pmkTrailsId = ?';
+        $data[] = $pmkTrailsId;
 
         if ($thisDatabaseReader->querySecurityOk($query, 1)) {
             $query = $thisDatabaseWriter->sanitizeQuery($query);
             $results = $thisDatabaseWriter->update($query, $data);
         }
+
         } else {
             if ($thisDatabaseWriter->querySecurityOk($query, 0)) {
                 $query = $thisDatabaseWriter->sanitizeQuery($query);
@@ -235,7 +244,7 @@ if (isset($_POST["btnSubmit"])) {
                 
                 
                 <input type="hidden" id="hidtrailsId" name="hidtrailsId"
-                       value="<?php print $pmktrailsId; ?>"
+                       value="<?php print $pmkTrailsId; ?>"
                 >
 
  <fieldset class = "contact">
@@ -273,15 +282,48 @@ if (isset($_POST["btnSubmit"])) {
 
     <p>
         <label class="required" for="txtHikingTime">Hiking Duration (hh:mm:ss)</label>
+        <?php
+        $hr = '';
+        $min = '';
+        $sec = '';
+        ?>
         <input
             <?php if ($hikingTimeERROR)
                 print 'class="mistake"'; ?>
-            id="txtHikingTime"
-            name="txtHikingTime"
-            step = "1"
-            type="time"
-            value="<?php print date("H:i:s", $hikingTime); ?>"
+            id="hr"
+            name="HOURS"
+            min="0";
+            max="24";
+            type="number"
+            required minlength="2"
+            required maxlength="2"
+            value="00"
         >
+        <label>:</label>
+        <input
+            <?php if ($hikingTimeERROR)
+                print 'class="mistake"'; ?>
+                id="hr"
+                name="MIN"
+                min="0";
+                max="60";
+                type="number"
+                required minlength ="2"
+                required maxlength="2"
+                value="00"
+        >
+        <label>:</label>
+        <input
+            <?php if ($hikingTimeERROR)
+                print 'class="mistake"'; ?>
+                id="sec"
+                name="SEC"
+                min="0";
+                max="60";
+                type="number"
+                required minlength="2"
+                required maxlength="2"
+                value="00"
     </p>
 
      <p>

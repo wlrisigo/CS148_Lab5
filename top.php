@@ -6,6 +6,13 @@
         <meta name="author" content="Billy Risigo">
         <meta name="description" content="Hikers in vermont">
 
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
+
+        <link rel="stylesheet" href="../dist/bootstrap-duration-picker.css">
+        <script src="../dist/bootstrap-duration-picker-debug.js"></script>
+
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
@@ -34,5 +41,5 @@
     print '<body id="' . $PATH_PARTS['filename'] . '">';
     include 'header.php';
     include 'nav.php';
-    $isAdmin = true
+    $isAdmin = true;
     ?>
