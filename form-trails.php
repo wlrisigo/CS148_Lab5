@@ -24,6 +24,7 @@ $SEC = "00";
 $verticalRise = "";
 $rating = "";
 $trials = [];
+
 // If the form is an update we need to intial the values from the table
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
@@ -42,10 +43,11 @@ if (isset($_GET["id"])) {
     $hikingTime = $trails[0]["fldHikingTime"];
     $verticalRise = $trails[0]["fldVerticalRide"];
     $rating = $trails[0]["fldRating"];
-    $HOUR=subtr(strlen($hikingTime), 0,1);
-    $MIN=subtr(strlen($hikingTime), 3,4);
-    $SEC=subtr(strlen($hikingTime), 5,7);
     }
+
+$HOURS=substr($hikingTime, 0,2);
+$MIN=substr($hikingTime, 3,2);
+$SEC=substr($hikingTime, 6,2);
 
 
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
@@ -281,6 +283,7 @@ if (isset($_POST["btnSubmit"])) {
             onfocus="this.select()"
             tabindex="110"
             type="number"
+            step="0.01"
             min = "0"
             value="<?php print $totalDistance; ?>"
         >
@@ -288,11 +291,6 @@ if (isset($_POST["btnSubmit"])) {
 
     <p>
         <label class="required" for="txtHikingTime">Hiking Duration (hh:mm:ss)</label>
-        <?php
-        $hr = '';
-        $min = '';
-        $sec = '';
-        ?>
         <input
             <?php if ($hikingTimeERROR)
                 print 'class="mistake"'; ?>
@@ -303,7 +301,7 @@ if (isset($_POST["btnSubmit"])) {
             type="number"
             required minlength="2"
             required maxlength="2"
-            value="<?php print $HOUR; ?>"        >
+            value="<?php print $HOURS; ?>"        >
         <label>:</label>
         <input
             <?php if ($hikingTimeERROR)
@@ -315,7 +313,7 @@ if (isset($_POST["btnSubmit"])) {
                 type="number"
                 required minlength ="2"
                 required maxlength="2"
-                value="<?php print $MIN; ?>"
+                value= "<?php print $MIN; ?>"
         >
         <label>:</label>
         <input
@@ -328,7 +326,7 @@ if (isset($_POST["btnSubmit"])) {
                 type="number"
                 required minlength="2"
                 required maxlength="2"
-                value="<?php print $SEC; ?>"
+                value="<?php print $SEC; ?>" >
     </p>
 
      <p>
