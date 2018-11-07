@@ -18,6 +18,9 @@ $pmkTrailsId = -1;
 $trailName = ""; 
 $totalDistance = "";
 $hikingTime = "";
+$HOURS = "00";
+$MIN = "00";
+$SEC = "00";
 $verticalRise = "";
 $rating = "";
 $trials = [];
@@ -39,11 +42,9 @@ if (isset($_GET["id"])) {
     $hikingTime = $trails[0]["fldHikingTime"];
     $verticalRise = $trails[0]["fldVerticalRide"];
     $rating = $trails[0]["fldRating"];
-
-
-//    $HOUR=subtr(strlen($hikingTime), 0,1);
-//    $MIN=subtr(strlen($hikingTime), 3,4);
-//    $SEC=subtr(strlen($hikingTime), 5,7);
+    $HOUR=subtr(strlen($hikingTime), 0,1);
+    $MIN=subtr(strlen($hikingTime), 3,4);
+    $SEC=subtr(strlen($hikingTime), 5,7);
     }
 
 
@@ -302,8 +303,7 @@ if (isset($_POST["btnSubmit"])) {
             type="number"
             required minlength="2"
             required maxlength="2"
-            value="00"
-        >
+            value="<?php print $HOUR; ?>"        >
         <label>:</label>
         <input
             <?php if ($hikingTimeERROR)
@@ -315,7 +315,7 @@ if (isset($_POST["btnSubmit"])) {
                 type="number"
                 required minlength ="2"
                 required maxlength="2"
-                value="00"
+                value="<?php print $MIN; ?>"
         >
         <label>:</label>
         <input
@@ -328,7 +328,7 @@ if (isset($_POST["btnSubmit"])) {
                 type="number"
                 required minlength="2"
                 required maxlength="2"
-                value="00"
+                value="<?php print $SEC; ?>"
     </p>
 
      <p>
