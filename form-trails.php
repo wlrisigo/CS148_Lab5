@@ -41,13 +41,14 @@ if (isset($_GET["id"])) {
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
     $hikingTime = $trails[0]["fldHikingTime"];
-    $verticalRise = $trails[0]["fldVerticalRide"];
+    $verticalRise = $trails[0]["fldVerticalRise"];
     $rating = $trails[0]["fldRating"];
+    $HOURS=substr($hikingTime, 0,2);
+    $MIN=substr($hikingTime, 3,2);
+    $SEC=substr($hikingTime, 6,2);
     }
 
-$HOURS=substr($hikingTime, 0,2);
-$MIN=substr($hikingTime, 3,2);
-$SEC=substr($hikingTime, 6,2);
+
 
 
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
@@ -327,7 +328,11 @@ if (isset($_POST["btnSubmit"])) {
                 required minlength="2"
                 required maxlength="2"
                 value="<?php print $SEC; ?>" >
+
+
     </p>
+
+
 
      <p>
          <label class="required" for="txtVerticalRise">Height (ft)</label>
@@ -336,7 +341,6 @@ if (isset($_POST["btnSubmit"])) {
                  print 'class="mistake"'; ?>
              id="txtVerticalRise"
              name="txtVerticalRise"
-             onfocus="this.select()"
              tabindex="120"
              type="number"
              min = "0"
@@ -345,14 +349,24 @@ if (isset($_POST["btnSubmit"])) {
          >
      </p>
 
+
+
      <p>
          <div class="required" for="txtRating">Difficulty</div>
+
+
         <input
              <?php if ($ratingERROR)
-                 print 'class="mistake"'; ?>
+                 print 'class="mistake"';
+             ?>
              id="easy"
              name="txtRating"
              type="radio"
+             <?php
+             //if rating is Easy then make it sticky
+             if($rating == "Easy")
+                print "checked";
+             ?>
              value="Easy"
          > <label for="easy">Easy</label>
 
@@ -362,6 +376,11 @@ if (isset($_POST["btnSubmit"])) {
              id="moderate"
              name="txtRating"
              type="radio"
+             <?php
+             //if rating is Easy then make it sticky
+             if($rating == "Moderate")
+                 print "checked";
+             ?>
              value="Moderate"
          > <label for="moderate">Moderate</label>
 
@@ -371,6 +390,11 @@ if (isset($_POST["btnSubmit"])) {
              id="moderately-strenuous"
              name="txtRating"
              type="radio"
+             <?php
+             //if rating is Easy then make it sticky
+             if($rating == "Moderately Strenuous")
+                 print "checked";
+             ?>
              value="Moderately Strenuous"
          > <label for="moderately-strenuous">Moderately Strenuous</label>
 
@@ -380,9 +404,13 @@ if (isset($_POST["btnSubmit"])) {
              id="strenuous"
              name="txtRating"
              type="radio"
+             <?php
+             //if rating is Easy then make it sticky
+             if($rating == "Strenuous")
+                 print "checked";
+             ?>
              value="Strenuous"
          > <label for="strenuous">Strenuous</label>
-     </p>
 
 </fieldset>
 
