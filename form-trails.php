@@ -39,6 +39,11 @@ if (isset($_GET["id"])) {
     $hikingTime = $trails[0]["fldHikingTime"];
     $verticalRise = $trails[0]["fldVerticalRide"];
     $rating = $trails[0]["fldRating"];
+
+
+//    $HOUR=subtr(strlen($hikingTime), 0,1);
+//    $MIN=subtr(strlen($hikingTime), 3,4);
+//    $SEC=subtr(strlen($hikingTime), 5,7);
     }
 
 
