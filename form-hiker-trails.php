@@ -90,7 +90,7 @@ if (isset($_POST["btnSubmit"])) {
     // form. Note it is best to follow the same order as declared in section 1c.
    if(isset($_POST["selectedHiker"]))
         $xHiker = htmlentities($_POST["selectedHiker"], ENT_QUOTES, "UTF-8");
-    
+
    if(isset($_POST["txtDate"]))
         $date = htmlentities($_POST["txtDate"], ENT_QUOTES, "UTF-8"); 
     

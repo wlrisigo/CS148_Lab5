@@ -18,12 +18,13 @@ $pmkTrailsId = -1;
 $trailName = ""; 
 $totalDistance = "";
 $hikingTime = "";
-$HOURS = "00";
-$MIN = "00";
-$SEC = "00";
 $verticalRise = "";
 $rating = "";
 $trials = [];
+//For Formatting into Database (HH MM SS)
+$HOURS = "00";
+$MIN = "00";
+$SEC = "00";
 
 // If the form is an update we need to intial the values from the table
 if (isset($_GET["id"])) {
@@ -87,19 +88,24 @@ if (isset($_POST["btnSubmit"])) {
         $update = true;
     }
 
-    $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["txtTrailName"]))
+        $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["intTotalDistance"]))
+        $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["HOURS"]))
+        $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["MIN"]))
+        $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["SEC"]))
+        $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["txtVerticalRise"]))
+        $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["txtRating"]))
+        $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["HOURS"]) && isset($_POST["MIN"]) && isset($_POST["SEC"]))
+        $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
 
-    $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
 
-    $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
-    $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
-    $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
-
-    $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
-
-    $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
-
-    $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
 
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
 
@@ -129,7 +135,7 @@ if (isset($_POST["btnSubmit"])) {
         $errorMsg[] = "Enter the trail's Height";
         $verticalRiseERROR = true;
     }
-    if(rating == ""){
+    if($rating == ""){
         $errorMsg[] = "Enter the trail's Difficulty ";
         $ratingERROR = true;
     }
@@ -165,7 +171,7 @@ if (isset($_POST["btnSubmit"])) {
     $query .= 'fldTrailName = ?, ';
     $query .= 'fldTotalDistance = ?, ';
     $query .= 'fldHikingTime = ?, ';
-    $query .= 'fldVerticalRise = ? ';
+    $query .= 'fldVerticalRise = ?, ';
     $query .= 'fldRating = ? ';
 
     if (DEBUG) {
