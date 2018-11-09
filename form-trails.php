@@ -21,16 +21,28 @@ $hikingTime = "";
 $verticalRise = "";
 $rating = "";
 $trials = [];
+//Default tags
+$tagSet =[];
+//trail tags
+$trailTags = [];
 //For Formatting into Database (HH MM SS)
 $HOURS = "00";
 $MIN = "00";
 $SEC = "00";
 
+    $getTags = 'SELECT pmkTag, fldBinary FROM tblTags';
+
+if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
+    $query = $thisDatabaseReader->sanitizeQuery($getTags);
+    $tags = $thisDatabaseReader->select($getTags);
+}
+
 // If the form is an update we need to intial the values from the table
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
+
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
-    $query .= 'FROM tblTrails WHERE pmkTrailsId = ?';
+    $query .= 'FROM tblTrails WHERE pmkTrailsId = ? ';
 
     $data = array($pmkTrailsId);
 
@@ -38,6 +50,12 @@ if (isset($_GET["id"])) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
         $trails = $thisDatabaseReader->select($query, $data);
         }
+
+
+    $query = 'SELECT pfkTag FROM tblTrailTags';
+    $query .= 'WHERE pmkTrailsId = ? ';
+
+
 
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
@@ -48,8 +66,6 @@ if (isset($_GET["id"])) {
     $MIN=substr($hikingTime, 3,2);
     $SEC=substr($hikingTime, 6,2);
     }
-
-
 
 
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
@@ -139,7 +155,6 @@ if (isset($_POST["btnSubmit"])) {
         $errorMsg[] = "Enter the trail's Difficulty ";
         $ratingERROR = true;
     }
-
 
     print PHP_EOL . '<!-- SECTION: 2d Process Form - Passed Validation -->' . PHP_EOL;
 
@@ -358,8 +373,7 @@ if (isset($_POST["btnSubmit"])) {
 
 
      <p>
-         <div class="required" for="txtRating">Difficulty</div>
-
+         <label class="required" for="txtRating">Difficulty: </label>
 
         <input
              <?php if ($ratingERROR)
@@ -374,7 +388,7 @@ if (isset($_POST["btnSubmit"])) {
                 print "checked";
              ?>
              value="Easy"
-         > <label for="easy">Easy</label>
+         > <span for="easy">Easy</span>
 
          <input
              <?php if ($ratingERROR)
@@ -388,7 +402,7 @@ if (isset($_POST["btnSubmit"])) {
                  print "checked";
              ?>
              value="Moderate"
-         > <label for="moderate">Moderate</label>
+         > <span for="moderate">Moderate</span>
 
          <input
              <?php if ($ratingERROR)
@@ -402,7 +416,7 @@ if (isset($_POST["btnSubmit"])) {
                  print "checked";
              ?>
              value="Moderately Strenuous"
-         > <label for="moderately-strenuous">Moderately Strenuous</label>
+         > <span for="moderately-strenuous">Moderately Strenuous</span>
 
          <input
              <?php if ($ratingERROR)
@@ -416,7 +430,10 @@ if (isset($_POST["btnSubmit"])) {
                  print "checked";
              ?>
              value="Strenuous"
-         > <label for="strenuous">Strenuous</label>
+         > <span for="strenuous">Strenuous</span>
+
+         </p>
+
 
 </fieldset>
 
