@@ -21,7 +21,7 @@ $hikingTime = "";
 $verticalRise = "";
 $rating = "";
 $trials = [];
-//Default tags
+//Default - new or update
 $tagSet =[];
 //trail tags
 $trailTags = [];
@@ -34,15 +34,15 @@ $SEC = "00";
 
 if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
     $query = $thisDatabaseReader->sanitizeQuery($getTags);
-    $tags = $thisDatabaseReader->select($getTags);
+    $tagSet = $thisDatabaseReader->select($getTags);
 }
 
-// If the form is an update we need to intial the values from the table
+// If the form is an update we need to initial the values from the table
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
 
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
-    $query .= 'FROM tblTrails WHERE pmkTrailsId = ? ';
+    $query .= 'FROM tblTrails WHERE pfkTrailsId = ? ';
 
     $data = array($pmkTrailsId);
 
@@ -52,9 +52,18 @@ if (isset($_GET["id"])) {
         }
 
 
-    $query = 'SELECT pfkTag FROM tblTrailTags';
-    $query .= 'WHERE pmkTrailsId = ? ';
+        //when saving
+        //DELETE ALL TAGS from tblTrail where id ==
+    //POST array in post array if checked
+    // if not not in post check
 
+    //post: array is an index at which ones are checked
+    // [ski][0]
+
+
+
+//    $query = 'SELECT pfkTag FROM tblTrailTags';
+//    $query .= 'WHERE pmkTrailsId = ? ';
 
 
     $trailName = $trails[0]["fldTrailName"];
@@ -121,6 +130,34 @@ if (isset($_POST["btnSubmit"])) {
     if(isset($_POST["HOURS"]) && isset($_POST["MIN"]) && isset($_POST["SEC"]))
         $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
 
+    $Checked = [];
+    if(isset($_POST["chkeasy"])){
+        $easy = htmlentities($_POST["chkeasy"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "easy");
+    }
+    if(isset($_POST["chkdogsallowed"])){
+        $dogs = htmlentities($_POST["chkdogsallowed"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "dogs allowed");
+    }
+    if(isset($_POST["chkhiking"])){
+        $hikable = htmlentities($_POST["chkhiking"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "hiking");
+    }
+    if(isset($_POST["chkhard"])){
+        $hard = htmlentities($_POST["chkhard"], ENT_QUOTES, "UTF-8");
+             array_push($Checked, "hard");
+    }
+    if(isset($_POST["chkskiing"])){
+        $skiing = htmlentities($_POST["chkskiing"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "skiing");
+    }
+    if(isset($_POST["chkviews"])){
+        $views = htmlentities($_POST["chkviews"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "views");
+    }
+    print_r($Checked);
+
+
 
 
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
@@ -133,6 +170,8 @@ if (isset($_POST["btnSubmit"])) {
         $errorMsg[] = "Your first name appears to have extra character.";
         $trailNameERROR = true;
     }
+
+
 
     if ($totalDistance == "") {
         $errorMsg[] = "Enter Distance";
@@ -433,6 +472,25 @@ if (isset($_POST["btnSubmit"])) {
          > <span for="strenuous">Strenuous</span>
 
          </p>
+
+     <label>Pick Applicable Tags: </label>
+
+     <?php
+     $i = 0;
+     foreach($tagSet as $tag){
+         print "\t" . '<label for="chk' . str_replace(" ", "", $tag["pmkTag"]) . '"><input type="checkbox" ';
+         print ' id="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
+         print ' name="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
+
+
+         if ($tag["fldBinary"]) {
+             print ' checked ';
+         }
+         // the value is the index number of the hobby array
+         print 'value="' . $i++ . '">' . $tag["pmkTag"];
+         print '</label>' . PHP_EOL;
+     }
+     ?>
 
 
 </fieldset>
