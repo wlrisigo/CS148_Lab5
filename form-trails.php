@@ -13,7 +13,7 @@ print PHP_EOL . '<!-- SECTION: 1a. debugging setup -->' . PHP_EOL;
 //}
 
 print PHP_EOL . '<!-- SECTION: 1b form variables -->' . PHP_EOL;
-
+$primaryKey = 0;
 $pmkTrailsId = -1;
 $trailName = ""; 
 $totalDistance = "";
@@ -29,6 +29,7 @@ $trailTags = [];
 $HOURS = "00";
 $MIN = "00";
 $SEC = "00";
+
 
     $getTags = 'SELECT pmkTag, fldBinary FROM tblTags';
 
@@ -49,22 +50,21 @@ if (isset($_GET["id"])) {
     if ($thisDatabaseReader->querySecurityOk($query, 1)) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
         $trails = $thisDatabaseReader->select($query, $data);
-        }
+    }
 
+    $queryTags = "SELECT * FROM tblTrailTags ";
+    $queryTags .= "WHERE pfkTrailsId = ?";
 
-        //when saving
-        //DELETE ALL TAGS from tblTrail where id ==
-    //POST array in post array if checked
-    // if not not in post check
+    $trailTagsData = array($pmkTrailsId);
 
-    //post: array is an index at which ones are checked
-    // [ski][0]
+    if ($thisDatabaseReader->querySecurityOk($query, 1)) {
+        $queryTags = $thisDatabaseReader->sanitizeQuery($queryTags);
+        $trailTags = $thisDatabaseReader->select($queryTags, $trailTagsData);
+    }
 
-
-
-//    $query = 'SELECT pfkTag FROM tblTrailTags';
-//    $query .= 'WHERE pmkTrailsId = ? ';
-
+    foreach($trailTags as $tags){
+        $tagSet[($tags)] = 1;
+    }
 
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
@@ -131,21 +131,25 @@ if (isset($_POST["btnSubmit"])) {
         $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
 
     $Checked = [];
+    $CheckedName = [];
     if(isset($_POST["chkeasy"])){
         $easy = htmlentities($_POST["chkeasy"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "easy");
+        array_push($Checked, "$easy");
+        array_push($CheckedName, "easy");
     }
     if(isset($_POST["chkdogsallowed"])){
         $dogs = htmlentities($_POST["chkdogsallowed"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "dogs allowed");
+        array_push($Checked, "$dogs");
+        array_push($CheckedName, "dogs allowed");
     }
     if(isset($_POST["chkhiking"])){
         $hikable = htmlentities($_POST["chkhiking"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "hiking");
+        array_push($Checked, "$hikable");
+        array_push($CheckedName, "hiking");
     }
     if(isset($_POST["chkhard"])){
         $hard = htmlentities($_POST["chkhard"], ENT_QUOTES, "UTF-8");
-             array_push($Checked, "hard");
+             array_push($Checked, $hard);
     }
     if(isset($_POST["chkskiing"])){
         $skiing = htmlentities($_POST["chkskiing"], ENT_QUOTES, "UTF-8");
@@ -156,6 +160,8 @@ if (isset($_POST["btnSubmit"])) {
         array_push($Checked, "views");
     }
     print_r($Checked);
+
+
 
 
 
@@ -205,13 +211,21 @@ if (isset($_POST["btnSubmit"])) {
     print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
 
     $dataEntered = false;
+    $dataEntered2 = false;
+
     $data = array();
+
+    $data2 = array();
 
     $data[] = $trailName;
     $data[] = $totalDistance;
     $data[] = $hikingTime;
     $data[] = $verticalRise;
     $data[] = $rating;
+    $data2[1] = $CheckedName;
+
+
+
 
     try {
     $thisDatabaseWriter->db->beginTransaction();
@@ -220,6 +234,7 @@ if (isset($_POST["btnSubmit"])) {
         $query = 'UPDATE tblTrails SET ';
     } else {
         $query = 'INSERT INTO tblTrails SET ';
+
     }
 
     $query .= 'fldTrailName = ?, ';
@@ -228,9 +243,17 @@ if (isset($_POST["btnSubmit"])) {
     $query .= 'fldVerticalRise = ?, ';
     $query .= 'fldRating = ? ';
 
+   $query2 = 'INSERT INTO tblTrailsTags';
+
+
+   $query2 = 'fld pfkTrailsId = ?, ';
+   $query2 = 'fld pfkTag = ? ';
+
     if (DEBUG) {
         $thisDatabaseWriter->TestSecurityQuery($query, 0);
+        $thisDatabaseWriter->TestSecurityQuery($query2, 0);
         print_r($data);
+        print_r($data2);
     }
 
     if ($update) {
@@ -250,6 +273,13 @@ if (isset($_POST["btnSubmit"])) {
 
                 $primaryKey = $thisDatabaseWriter->lastInsert();
             }
+//
+        if ($thisDatabaseWriter->querySecurityOk($query2, 0)) {
+            $data2[0] = $primaryKey;
+            $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
+            $results = $thisDatabaseWriter->insert($query2, $data2);
+        }
+
     }
 
     if (DEBUG) {
@@ -259,6 +289,7 @@ if (isset($_POST["btnSubmit"])) {
         // all sql statements are done so lets commit to our changes
 
         $dataEntered = $thisDatabaseWriter->db->commit();
+        $dataEntered2 = $thisDatabaseWriter->db->commit();
 
         if (DEBUG)
          print "<p>transaction complete ";
