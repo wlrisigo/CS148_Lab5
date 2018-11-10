@@ -9,31 +9,54 @@ print_r($_POST);
 print '</pre>';
 //}
 print PHP_EOL . '<!-- SECTION: 1b form variables -->' . PHP_EOL;
+$primaryKey = 0;
 $pmkTrailsId = -1;
 $trailName = "";
 $totalDistance = "";
 $hikingTime = "";
 $HOURS = "00";
 $MIN = "00";
+$tagSet =[];
+$trailTags = [];
 $SEC = "00";
 $verticalRise = "";
 $rating = "";
 $trials = [];
 // If the form is an update we need to intial the values from the table
+
+
+$getTags = 'SELECT pmkTag, fldBinary FROM tblTags';
+if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
+    $query = $thisDatabaseReader->sanitizeQuery($getTags);
+    $tagSet = $thisDatabaseReader->select($getTags);
+}
+
+
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
     $query .= 'FROM tblTrails WHERE pmkTrailsId = ?';
     $data = array($pmkTrailsId);
+
     if ($thisDatabaseReader->querySecurityOk($query, 1)) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
         $trails = $thisDatabaseReader->select($query, $data);
     }
+
+    $queryTags = "SELECT * FROM tblTrailTags ";
+    $queryTags .= "WHERE pfkTrailsId = ?";
+    $trailTagsData = array($pmkTrailsId);
+    if ($thisDatabaseReader->querySecurityOk($query, 1)) {
+        $queryTags = $thisDatabaseReader->sanitizeQuery($queryTags);
+        $trailTags = $thisDatabaseReader->select($queryTags, $trailTagsData);
+    }
+
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
     $hikingTime = $trails[0]["fldHikingTime"];
     $verticalRise = $trails[0]["fldVerticalRise"];
     $rating = $trails[0]["fldRating"];
+
     $HOURS=substr($hikingTime, 0,2);
     $MIN=substr($hikingTime, 3,2);
     $SEC=substr($hikingTime, 6,2);
@@ -62,14 +85,52 @@ if (isset($_POST["btnSubmit"])) {
     if ($pmkTrailsId > 0) {
         $update = true;
     }
-    $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
-    $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
-    $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
-    $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
-    $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
-    $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
-    $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
-    $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["txtTrailName"]))
+        $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["intTotalDistance"]))
+        $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["HOURS"]))
+        $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["MIN"]))
+        $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["SEC"]))
+        $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["txtVerticalRise"]))
+        $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["txtRating"]))
+        $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["HOURS"]) && isset($_POST["MIN"]) && isset($_POST["SEC"]))
+        $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
+    $Checked = [];
+    $CheckedName = [];
+    if(isset($_POST["chkeasy"])){
+        $easy = htmlentities($_POST["chkeasy"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "$easy");
+        array_push($CheckedName, "easy");
+    }
+    if(isset($_POST["chkdogsallowed"])){
+        $dogs = htmlentities($_POST["chkdogsallowed"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "$dogs");
+        array_push($CheckedName, "dogs allowed");
+    }
+    if(isset($_POST["chkhiking"])){
+        $hikable = htmlentities($_POST["chkhiking"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "$hikable");
+        array_push($CheckedName, "hiking");
+    }
+    if(isset($_POST["chkhard"])){
+        $hard = htmlentities($_POST["chkhard"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, $hard);
+    }
+    if(isset($_POST["chkskiing"])){
+        $skiing = htmlentities($_POST["chkskiing"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "skiing");
+    }
+    if(isset($_POST["chkviews"])){
+        $views = htmlentities($_POST["chkviews"], ENT_QUOTES, "UTF-8");
+        array_push($Checked, "views");
+    }
+
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
     if ($trailName == "") {
         $errorMsg[] = "Please enter your first name";
@@ -103,12 +164,19 @@ if (isset($_POST["btnSubmit"])) {
         }
         print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
         $dataEntered = false;
+        $dataEntered2 = false;
         $data = array();
+        $data2 = array();
         $data[] = $trailName;
         $data[] = $totalDistance;
         $data[] = $hikingTime;
         $data[] = $verticalRise;
         $data[] = $rating;
+
+        //for other query
+        $data2[1] = $CheckedName;
+
+
         try {
             $thisDatabaseWriter->db->beginTransaction();
             if ($update) {
@@ -121,9 +189,17 @@ if (isset($_POST["btnSubmit"])) {
             $query .= 'fldHikingTime = ?, ';
             $query .= 'fldVerticalRise = ? ';
             $query .= 'fldRating = ? ';
+
+            $query2 = 'INSERT INTO tblTrailsTags';
+
+            $query2 = 'fld pfkTrailsId = ?, ';
+            $query2 = 'fld pfkTag = ? ';
+
             if (DEBUG) {
                 $thisDatabaseWriter->TestSecurityQuery($query, 0);
+                $thisDatabaseWriter->TestSecurityQuery($query2, 0);
                 print_r($data);
+                print_r($data2);
             }
             if ($update) {
                 $query .= 'WHERE pmkTrailsId = ?';
@@ -137,6 +213,11 @@ if (isset($_POST["btnSubmit"])) {
                     $query = $thisDatabaseWriter->sanitizeQuery($query);
                     $results = $thisDatabaseWriter->insert($query, $data);
                     $primaryKey = $thisDatabaseWriter->lastInsert();
+                }
+                if ($thisDatabaseWriter->querySecurityOk($query2, 0)) {
+                    $data2[0] = $primaryKey;
+                    $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
+                    $results = $thisDatabaseWriter->insert($query2, $data2);
                 }
             }
             if (DEBUG) {
@@ -346,6 +427,24 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                         ?>
                             value="Strenuous"
                     > <label for="strenuous">Strenuous</label>
+
+                    <p></p>
+                    <label>Pick Applicable Tags: </label>
+                    <?php
+                    $i = 0;
+                    foreach($tagSet as $tag){
+                        print "\t" . '<label for="chk' . str_replace(" ", "", $tag["pmkTag"]) . '"><input type="checkbox" ';
+                        print ' id="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
+                        print ' name="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
+                        if ($tag["fldBinary"]) {
+                            print ' checked ';
+                        }
+                        // the value is the index number of the hobby array
+                        print 'value="' . $i++ . '">' . $tag["pmkTag"];
+                        print '</label>';
+
+                    }
+                    ?>
 
                 </fieldset>
 
