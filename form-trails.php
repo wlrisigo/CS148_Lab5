@@ -14,35 +14,32 @@ $pmkTrailsId = -1;
 $trailName = "";
 $totalDistance = "";
 $hikingTime = "";
-$HOURS = "00";
-$MIN = "00";
-$tagSet =[];
-$trailTags = [];
-$SEC = "00";
 $verticalRise = "";
 $rating = "";
 $trials = [];
-// If the form is an update we need to intial the values from the table
-
-
+//Default - new or update
+$tagSet =[];
+//trail tags
+$trailTags = [];
+//For Formatting into Database (HH MM SS)
+$HOURS = "00";
+$MIN = "00";
+$SEC = "00";
 $getTags = 'SELECT pmkTag, fldBinary FROM tblTags';
 if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
     $query = $thisDatabaseReader->sanitizeQuery($getTags);
     $tagSet = $thisDatabaseReader->select($getTags);
 }
-
-
+// If the form is an update we need to initial the values from the table
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
-    $query .= 'FROM tblTrails WHERE pmkTrailsId = ?';
+    $query .= 'FROM tblTrails WHERE pfkTrailsId = ? ';
     $data = array($pmkTrailsId);
-
     if ($thisDatabaseReader->querySecurityOk($query, 1)) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
         $trails = $thisDatabaseReader->select($query, $data);
     }
-
     $queryTags = "SELECT * FROM tblTrailTags ";
     $queryTags .= "WHERE pfkTrailsId = ?";
     $trailTagsData = array($pmkTrailsId);
@@ -50,13 +47,14 @@ if (isset($_GET["id"])) {
         $queryTags = $thisDatabaseReader->sanitizeQuery($queryTags);
         $trailTags = $thisDatabaseReader->select($queryTags, $trailTagsData);
     }
-
+    foreach($trailTags as $tags){
+        $tagSet[($tags)] = 1;
+    }
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
     $hikingTime = $trails[0]["fldHikingTime"];
     $verticalRise = $trails[0]["fldVerticalRise"];
     $rating = $trails[0]["fldRating"];
-
     $HOURS=substr($hikingTime, 0,2);
     $MIN=substr($hikingTime, 3,2);
     $SEC=substr($hikingTime, 6,2);
@@ -121,14 +119,17 @@ if (isset($_POST["btnSubmit"])) {
     if(isset($_POST["chkhard"])){
         $hard = htmlentities($_POST["chkhard"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $hard);
+        array_push($CheckedName, "hard");
     }
     if(isset($_POST["chkskiing"])){
         $skiing = htmlentities($_POST["chkskiing"], ENT_QUOTES, "UTF-8");
         array_push($Checked, "skiing");
+        array_push($CheckedName, "skiing");
     }
     if(isset($_POST["chkviews"])){
         $views = htmlentities($_POST["chkviews"], ENT_QUOTES, "UTF-8");
         array_push($Checked, "views");
+        array_push($CheckedName, "views");
     }
 
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
@@ -153,7 +154,7 @@ if (isset($_POST["btnSubmit"])) {
         $errorMsg[] = "Enter the trail's Height";
         $verticalRiseERROR = true;
     }
-    if(rating == ""){
+    if($rating == ""){
         $errorMsg[] = "Enter the trail's Difficulty ";
         $ratingERROR = true;
     }
@@ -173,10 +174,6 @@ if (isset($_POST["btnSubmit"])) {
         $data[] = $verticalRise;
         $data[] = $rating;
 
-        //for other query
-        $data2[1] = $CheckedName;
-
-
         try {
             $thisDatabaseWriter->db->beginTransaction();
             if ($update) {
@@ -187,13 +184,14 @@ if (isset($_POST["btnSubmit"])) {
             $query .= 'fldTrailName = ?, ';
             $query .= 'fldTotalDistance = ?, ';
             $query .= 'fldHikingTime = ?, ';
-            $query .= 'fldVerticalRise = ? ';
+            $query .= 'fldVerticalRise = ?, ';
             $query .= 'fldRating = ? ';
 
-            $query2 = 'INSERT INTO tblTrailsTags';
+            //This is where we will be inserting into table TrailsTags
+            $query2 = 'INSERT INTO tblTrailTags SET ';
+            $query2 .= 'pfkTrailsId = ?, ';
+            $query2 .= 'pfkTag = ? ';
 
-            $query2 = 'fld pfkTrailsId = ?, ';
-            $query2 = 'fld pfkTag = ? ';
 
             if (DEBUG) {
                 $thisDatabaseWriter->TestSecurityQuery($query, 0);
@@ -214,10 +212,16 @@ if (isset($_POST["btnSubmit"])) {
                     $results = $thisDatabaseWriter->insert($query, $data);
                     $primaryKey = $thisDatabaseWriter->lastInsert();
                 }
+//
                 if ($thisDatabaseWriter->querySecurityOk($query2, 0)) {
                     $data2[0] = $primaryKey;
-                    $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
-                    $results = $thisDatabaseWriter->insert($query2, $data2);
+                    foreach($CheckedName as $name){
+                        $data2[1]  = $name;
+                        $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
+                        print_r($query2);
+                        $results = $thisDatabaseWriter->insert($query2, $data2);
+                        print_r($results);
+                    }
                 }
             }
             if (DEBUG) {
@@ -225,6 +229,7 @@ if (isset($_POST["btnSubmit"])) {
             }
             // all sql statements are done so lets commit to our changes
             $dataEntered = $thisDatabaseWriter->db->commit();
+            $dataEntered2 = $thisDatabaseWriter->db->commit();
             if (DEBUG)
                 print "<p>transaction complete ";
         } catch (PDOExecption $e) {
@@ -368,68 +373,69 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
 
                     <p>
-                    <div class="required" for="txtRating">Difficulty</div>
+                        <label class="required" for="txtRating">Difficulty: </label>
 
+                        <input
+                            <?php if ($ratingERROR)
+                                print 'class="mistake"';
+                            ?>
+                                id="easy"
+                                name="txtRating"
+                                type="radio"
+                            <?php
+                            //if rating is Easy then make it sticky
+                            if($rating == "Easy")
+                                print "checked";
+                            ?>
+                                value="Easy"
+                        > <span for="easy">Easy</span>
 
-                    <input
-                        <?php if ($ratingERROR)
-                            print 'class="mistake"';
-                        ?>
-                            id="easy"
-                            name="txtRating"
-                            type="radio"
-                        <?php
-                        //if rating is Easy then make it sticky
-                        if($rating == "Easy")
-                            print "checked";
-                        ?>
-                            value="Easy"
-                    > <label for="easy">Easy</label>
+                        <input
+                            <?php if ($ratingERROR)
+                                print 'class="mistake"'; ?>
+                                id="moderate"
+                                name="txtRating"
+                                type="radio"
+                            <?php
+                            //if rating is Easy then make it sticky
+                            if($rating == "Moderate")
+                                print "checked";
+                            ?>
+                                value="Moderate"
+                        > <span for="moderate">Moderate</span>
 
-                    <input
-                        <?php if ($ratingERROR)
-                            print 'class="mistake"'; ?>
-                            id="moderate"
-                            name="txtRating"
-                            type="radio"
-                        <?php
-                        //if rating is Easy then make it sticky
-                        if($rating == "Moderate")
-                            print "checked";
-                        ?>
-                            value="Moderate"
-                    > <label for="moderate">Moderate</label>
+                        <input
+                            <?php if ($ratingERROR)
+                                print 'class="mistake"'; ?>
+                                id="moderately-strenuous"
+                                name="txtRating"
+                                type="radio"
+                            <?php
+                            //if rating is Easy then make it sticky
+                            if($rating == "Moderately Strenuous")
+                                print "checked";
+                            ?>
+                                value="Moderately Strenuous"
+                        > <span for="moderately-strenuous">Moderately Strenuous</span>
 
-                    <input
-                        <?php if ($ratingERROR)
-                            print 'class="mistake"'; ?>
-                            id="moderately-strenuous"
-                            name="txtRating"
-                            type="radio"
-                        <?php
-                        //if rating is Easy then make it sticky
-                        if($rating == "Moderately Strenuous")
-                            print "checked";
-                        ?>
-                            value="Moderately Strenuous"
-                    > <label for="moderately-strenuous">Moderately Strenuous</label>
+                        <input
+                            <?php if ($ratingERROR)
+                                print 'class="mistake"'; ?>
+                                id="strenuous"
+                                name="txtRating"
+                                type="radio"
+                            <?php
+                            //if rating is Easy then make it sticky
+                            if($rating == "Strenuous")
+                                print "checked";
+                            ?>
+                                value="Strenuous"
+                        > <span for="strenuous">Strenuous</span>
 
-                    <input
-                        <?php if ($ratingERROR)
-                            print 'class="mistake"'; ?>
-                            id="strenuous"
-                            name="txtRating"
-                            type="radio"
-                        <?php
-                        //if rating is Easy then make it sticky
-                        if($rating == "Strenuous")
-                            print "checked";
-                        ?>
-                            value="Strenuous"
-                    > <label for="strenuous">Strenuous</label>
+                    </p>
 
-                    <p></p>
                     <label>Pick Applicable Tags: </label>
+
                     <?php
                     $i = 0;
                     foreach($tagSet as $tag){
@@ -441,10 +447,10 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                         }
                         // the value is the index number of the hobby array
                         print 'value="' . $i++ . '">' . $tag["pmkTag"];
-                        print '</label>';
-
+                        print '</label>' . PHP_EOL;
                     }
                     ?>
+
 
                 </fieldset>
 
