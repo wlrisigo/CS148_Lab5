@@ -2,13 +2,21 @@
 include 'top.php';
 print PHP_EOL . '<!-- SECTION: 1 Initialize variables -->' . PHP_EOL;
 $update = false;
+
+
 print PHP_EOL . '<!-- SECTION: 1a. debugging setup -->' . PHP_EOL;
+
+
 //if (DEBUG) {
 print '<p>Post Array:</p><pre>';
 print_r($_POST);
 print '</pre>';
 //}
+
+
 print PHP_EOL . '<!-- SECTION: 1b form variables -->' . PHP_EOL;
+
+$dataDelete =[];
 $primaryKey = 0;
 $pmkTrailsId = -1;
 $trailName = "";
@@ -25,21 +33,26 @@ $trailTags = [];
 $HOURS = "00";
 $MIN = "00";
 $SEC = "00";
+$alreadyChosen = array();
+
 $getTags = 'SELECT pmkTag, fldBinary FROM tblTags';
 if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
     $query = $thisDatabaseReader->sanitizeQuery($getTags);
     $tagSet = $thisDatabaseReader->select($getTags);
 }
+
+
 // If the form is an update we need to initial the values from the table
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
-    $query .= 'FROM tblTrails WHERE pfkTrailsId = ? ';
+    $query .= 'FROM tblTrails WHERE pmkTrailsId = ? ';
     $data = array($pmkTrailsId);
     if ($thisDatabaseReader->querySecurityOk($query, 1)) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
         $trails = $thisDatabaseReader->select($query, $data);
     }
+
     $queryTags = "SELECT * FROM tblTrailTags ";
     $queryTags .= "WHERE pfkTrailsId = ?";
     $trailTagsData = array($pmkTrailsId);
@@ -47,9 +60,21 @@ if (isset($_GET["id"])) {
         $queryTags = $thisDatabaseReader->sanitizeQuery($queryTags);
         $trailTags = $thisDatabaseReader->select($queryTags, $trailTagsData);
     }
-    foreach($trailTags as $tags){
-        $tagSet[($tags)] = 1;
+
+    $count = 0;
+
+    //makes checkboxes sticky and populates an array holding just the tags
+for($count; $count < count($trailTags); $count++) {
+    array_push($alreadyChosen,$trailTags[$count]["pfkTag"]);
+    foreach ($tagSet as &$tagging) {
+        if ($tagging["pmkTag"] == $trailTags[$count]["pfkTag"]) {
+            $tagging["fldBinary"] = 1;
+            $tagging[1] = 1;
+        }
     }
+    unset($tagging);
+}
+
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
     $hikingTime = $trails[0]["fldHikingTime"];
@@ -60,28 +85,52 @@ if (isset($_GET["id"])) {
     $SEC=substr($hikingTime, 6,2);
 }
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
+
 $trailNameERROR = false;
 $totalDistanceERROR = false;
 $hikingTimeERROR = false;
 $verticalRiseERROR = false;
 $ratingERROR = false;
+
 print PHP_EOL . '<!-- SECTION: 1d misc variables -->' . PHP_EOL;
+
+
 $errorMsg = array();
 $mailed = false;
 $dataEntered = false;
+
+
 print PHP_EOL . '<!-- SECTION: 2 Process for when the form is submitted -->' . PHP_EOL;
+
+
 if (isset($_POST["btnSubmit"])) {
+
     print PHP_EOL . '<!-- SECTION: 2a Security -->' . PHP_EOL;
+
+
     $thisURL = DOMAIN . PHP_SELF;
     if (!securityCheck($thisURL)) {
         $msg = '<p>Sorry you cannot access this page.</p>';
         $msg.= '<p>Security breach detected and reported.</p>';
         die($msg);
     }
+
+
     print PHP_EOL . '<!-- SECTION: 2b Sanitize (clean) data  -->' . PHP_EOL;
+
+
     $pmkTrailsId = (int) htmlentities($_POST["hidtrailsId"], ENT_QUOTES, "UTF-8");
     if ($pmkTrailsId > 0) {
         $update = true;
+
+        $dataDelete [0] = $pmkTrailsId;
+        $DELETE = 'DELETE FROM tblTrailTags WHERE pfkTrailsId = ?';
+
+        if ($thisDatabaseReader->querySecurityOk($DELETE, 1)) {
+            $query = $thisDatabaseWriter->sanitizeQuery($DELETE);
+            $results = $thisDatabaseWriter->update($DELETE, $dataDelete);
+        }
+
     }
     if(isset($_POST["txtTrailName"]))
         $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
@@ -99,8 +148,11 @@ if (isset($_POST["btnSubmit"])) {
         $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
     if(isset($_POST["HOURS"]) && isset($_POST["MIN"]) && isset($_POST["SEC"]))
         $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
+
+
     $Checked = [];
     $CheckedName = [];
+
     if(isset($_POST["chkeasy"])){
         $easy = htmlentities($_POST["chkeasy"], ENT_QUOTES, "UTF-8");
         array_push($Checked, "$easy");
@@ -132,7 +184,15 @@ if (isset($_POST["btnSubmit"])) {
         array_push($CheckedName, "views");
     }
 
+foreach ($tagSet as $tagging) {
+        print 'This is Tag: ' . $tagging['pmkTag'] . " | This is fldBinary: " . $tagging['fldBinary'] . " || ";
+
+    }
+
+
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
+
+
     if ($trailName == "") {
         $errorMsg[] = "Please enter your first name";
         $trailNameERROR = true;
@@ -143,6 +203,9 @@ if (isset($_POST["btnSubmit"])) {
     if ($totalDistance == "") {
         $errorMsg[] = "Enter Distance";
         $totalDistanceERROR = true;
+    }
+    if($HOUR < 0 || $MIN < 0 || $SEC < 0){
+        $errorMsg[] = "Cannot Enter a Negative Number";
     }
     if(strlen($hikingTime) > 9 || strlen($hikingTime)<8){
         $errorMsg[] = "Format must be HH:MM:SS";
@@ -159,11 +222,16 @@ if (isset($_POST["btnSubmit"])) {
         $ratingERROR = true;
     }
     print PHP_EOL . '<!-- SECTION: 2d Process Form - Passed Validation -->' . PHP_EOL;
+
+
     if (!$errorMsg) {
         if (DEBUG) {
             print "<p>Form is valid</p>";
         }
-        print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
+
+    print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
+
+
         $dataEntered = false;
         $dataEntered2 = false;
         $data = array();
@@ -187,7 +255,7 @@ if (isset($_POST["btnSubmit"])) {
             $query .= 'fldVerticalRise = ?, ';
             $query .= 'fldRating = ? ';
 
-            //This is where we will be inserting into table TrailsTags
+            //This is where we will be inserting into table TrailTags
             $query2 = 'INSERT INTO tblTrailTags SET ';
             $query2 .= 'pfkTrailsId = ?, ';
             $query2 .= 'pfkTag = ? ';
@@ -199,13 +267,28 @@ if (isset($_POST["btnSubmit"])) {
                 print_r($data);
                 print_r($data2);
             }
+
             if ($update) {
                 $query .= 'WHERE pmkTrailsId = ?';
                 $data[] = $pmkTrailsId;
+
+
                 if ($thisDatabaseReader->querySecurityOk($query, 1)) {
                     $query = $thisDatabaseWriter->sanitizeQuery($query);
                     $results = $thisDatabaseWriter->update($query, $data);
                 }
+
+
+                if ($thisDatabaseReader->querySecurityOk($query2, 0)) {
+                    $data2[0] = $pmkTrailsId;
+                    foreach($CheckedName as $name){
+                        $data2[1]  = $name;
+                        $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
+                        $results = $thisDatabaseWriter->insert($query2, $data2);
+                    }
+                }
+
+
             } else {
                 if ($thisDatabaseWriter->querySecurityOk($query, 0)) {
                     $query = $thisDatabaseWriter->sanitizeQuery($query);
@@ -218,9 +301,7 @@ if (isset($_POST["btnSubmit"])) {
                     foreach($CheckedName as $name){
                         $data2[1]  = $name;
                         $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
-                        print_r($query2);
                         $results = $thisDatabaseWriter->insert($query2, $data2);
-                        print_r($results);
                     }
                 }
             }
@@ -268,6 +349,8 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
 
             <h2>Trails</h2>
+
+
             <form action="<?php print PHP_SELF; ?>"
                   method="post"
                   id="frmRegister">
@@ -279,12 +362,11 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
                 <fieldset class = "contact">
                     <p>
-                        <label class="required" for="txtTrailName">Trail Name</label>
+                        <label class="required">Trail Name</label>
                         <input autofocus
                             <?php if ($trailNameERROR)
                                 print 'class="mistake"'; ?>
                                id="txtTrailName"
-                               maxlength="45"
                                name="txtTrailName"
                                onfocus="this.select()"
                                placeholder="Enter Trail name"
@@ -295,12 +377,11 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                     </p>
 
                     <p>
-                        <label class="required" for="intTotalDistance">Distance (Miles)</label>
+                        <label class="required">Distance (Miles)</label>
                         <input
                             <?php if ($totalDistanceERROR)
                                 print 'class="mistake"'; ?>
                                 id="intTotalDistance"
-                                maxlength="45"
                                 name="intTotalDistance"
                                 onfocus="this.select()"
                                 tabindex="110"
@@ -312,29 +393,26 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                     </p>
 
                     <p>
-                        <label class="required" for="txtHikingTime">Hiking Duration (hh:mm:ss)</label>
+                        <label class="required">Hiking Duration (hh:mm:ss)</label>
                         <input
                             <?php if ($hikingTimeERROR)
                                 print 'class="mistake"'; ?>
                                 id="hr"
                                 name="HOURS"
-                                min="0";
-                                max="24";
+                                min="0"
+                                max="24"
                                 type="number"
-                                required minlength="2"
-                                required maxlength="2"
+
                                 value="<?php print $HOURS; ?>"        >
                         <label>:</label>
                         <input
                             <?php if ($hikingTimeERROR)
                                 print 'class="mistake"'; ?>
-                                id="hr"
+                                id="min"
                                 name="MIN"
-                                min="0";
-                                max="60";
+                                min="0"
+                                max="60"
                                 type="number"
-                                required minlength ="2"
-                                required maxlength="2"
                                 value= "<?php print $MIN; ?>"
                         >
                         <label>:</label>
@@ -343,11 +421,9 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                                 print 'class="mistake"'; ?>
                                 id="sec"
                                 name="SEC"
-                                min="0";
-                                max="60";
+                                min="0"
+                                max="60"
                                 type="number"
-                                required minlength="2"
-                                required maxlength="2"
                                 value="<?php print $SEC; ?>" >
 
 
@@ -356,7 +432,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
 
                     <p>
-                        <label class="required" for="txtVerticalRise">Height (ft)</label>
+                        <label class="required">Height (ft)</label>
                         <input
                             <?php if ($verticalRiseERROR)
                                 print 'class="mistake"'; ?>
@@ -373,7 +449,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
 
                     <p>
-                        <label class="required" for="txtRating">Difficulty: </label>
+                        <label class="required">Difficulty: </label>
 
                         <input
                             <?php if ($ratingERROR)
@@ -388,7 +464,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                                 print "checked";
                             ?>
                                 value="Easy"
-                        > <span for="easy">Easy</span>
+                        > <span>Easy</span>
 
                         <input
                             <?php if ($ratingERROR)
@@ -402,7 +478,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                                 print "checked";
                             ?>
                                 value="Moderate"
-                        > <span for="moderate">Moderate</span>
+                        > <span>Moderate</span>
 
                         <input
                             <?php if ($ratingERROR)
@@ -416,7 +492,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                                 print "checked";
                             ?>
                                 value="Moderately Strenuous"
-                        > <span for="moderately-strenuous">Moderately Strenuous</span>
+                        > <span>Moderately Strenuous</span>
 
                         <input
                             <?php if ($ratingERROR)
@@ -430,7 +506,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                                 print "checked";
                             ?>
                                 value="Strenuous"
-                        > <span for="strenuous">Strenuous</span>
+                        > <span>Strenuous</span>
 
                     </p>
 
@@ -447,7 +523,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                         }
                         // the value is the index number of the hobby array
                         print 'value="' . $i++ . '">' . $tag["pmkTag"];
-                        print '</label>' . PHP_EOL;
+                        print '</label>';
                     }
                     ?>
 
