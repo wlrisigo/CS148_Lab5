@@ -227,7 +227,6 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
     } else {       
      print '<h2>Add Your Hike</h2>';
-     print '<p class="form-heading">Compete with local hikers, and take a hike!</p>';
      
         //####################################
         //
@@ -272,7 +271,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
           id = "frmRegister"
           method = "post">
       <fieldset>
-        <h2>List of Hikers</h2>
+        <h3>List of Hikers</h3>
 
         <label for="lstHikers" 
             <?php if($hikerERROR)
@@ -283,12 +282,14 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                     tabindex = "300">
             <?php
              foreach ($hikers as $hiker) {
-
+            print '<p>';
                 print '<option ';
                 if ($currentHiker == $hiker["pmkHikersId"])
                     print " selected='selected' ";
                 print 'value="' . $hiker["pmkHikersId"] . '">' . $hiker["fldFirstName"] . " " . $hiker["fldLastName"];
                 print '</option>';
+                print '</p>';
+
               }
       ?>
             </select></label>
@@ -327,7 +328,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                 </fieldset> <!-- ends contact -->
                 
                 <fieldset>
-        <h2>Chose Mountain</h2>
+        <h3>Chose Mountain</h3>
             <?php
              foreach ($mountains as $mountain) {
                 print '<input type = "radio"';

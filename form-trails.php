@@ -4,12 +4,12 @@ print PHP_EOL . '<!-- SECTION: 1 Initialize variables -->' . PHP_EOL;
 $update = false;
 print PHP_EOL . '<!-- SECTION: 1a. debugging setup -->' . PHP_EOL;
 //if (DEBUG) {
-print '<p>Post Array:</p><pre>';
-print_r($_POST);
-print '</pre>';
+//print '<p>Post Array:</p><pre>';
+//print_r($_POST);
+//print '</pre>';
 //}
 print PHP_EOL . '<!-- SECTION: 1b form variables -->' . PHP_EOL;
-$dataDelete =[];
+//------VARS------
 $primaryKey = 0;
 $pmkTrailsId = -1;
 $trailName = "";
@@ -17,16 +17,23 @@ $totalDistance = "";
 $hikingTime = "";
 $verticalRise = "";
 $rating = "";
-$trials = [];
-//Default - new or update
-$tagSet =[];
-//trail tags
-$trailTags = [];
 //For Formatting into Database (HH MM SS)
 $HOURS = "00";
 $MIN = "00";
 $SEC = "00";
-$alreadyChosen = array();
+
+//-----ARRAYS ------//
+
+// Holds trail information for updates
+$trials = [];
+// Holds default and update Tags for defined trail
+$tagSet =[];
+// Holds preexisting tags for updates
+$trailTags = [];
+//holds pfkTrailId for deletion
+$dataDelete =[];
+
+//Gets default values for new Trails
 $getTags = 'SELECT pmkTag, fldBinary FROM tblTags';
 if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
     $query = $thisDatabaseReader->sanitizeQuery($getTags);
@@ -35,24 +42,35 @@ if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
 // If the form is an update we need to initial the values from the table
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
+//query to get values from tbl trails where pmk matches
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
     $query .= 'FROM tblTrails WHERE pmkTrailsId = ? ';
+    //populate index 0 array to pmkTrailId for future use
     $data = array($pmkTrailsId);
+//execute query
     if ($thisDatabaseReader->querySecurityOk($query, 1)) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
         $trails = $thisDatabaseReader->select($query, $data);
     }
+//query to get values from TTT where pmk matches
     $queryTags = "SELECT * FROM tblTrailTags ";
     $queryTags .= "WHERE pfkTrailsId = ?";
+
+//populate index 0 array to pmkTrailId for future use
     $trailTagsData = array($pmkTrailsId);
     if ($thisDatabaseReader->querySecurityOk($query, 1)) {
         $queryTags = $thisDatabaseReader->sanitizeQuery($queryTags);
         $trailTags = $thisDatabaseReader->select($queryTags, $trailTagsData);
     }
-    $count = 0;
-    //makes checkboxes sticky and populates an array holding just the tags
-    for($count; $count < count($trailTags); $count++) {
-        array_push($alreadyChosen,$trailTags[$count]["pfkTag"]);
+//since its an update set all the fldBinary to false
+    foreach ($tagSet as &$tagging){
+        $tagging["fldBinary"] = 0;
+        $tagging[1] = 0;
+    }
+
+
+//compare trailTags with tagSet and set fldBinary true when tagSet matches with trailTags
+    for($count= 0; $count < count($trailTags); $count++) {
         foreach ($tagSet as &$tagging) {
             if ($tagging["pmkTag"] == $trailTags[$count]["pfkTag"]) {
                 $tagging["fldBinary"] = 1;
@@ -62,6 +80,7 @@ if (isset($_GET["id"])) {
         unset($tagging);
     }
 
+// address query vars to vars
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
     $hikingTime = $trails[0]["fldHikingTime"];
@@ -72,58 +91,66 @@ if (isset($_GET["id"])) {
     $SEC=substr($hikingTime, 6,2);
 }
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
+
+
 $trailNameERROR = false;
 $totalDistanceERROR = false;
 $hikingTimeERROR = false;
 $verticalRiseERROR = false;
 $ratingERROR = false;
+$tagERROR = false;
 print PHP_EOL . '<!-- SECTION: 1d misc variables -->' . PHP_EOL;
+
+
 $errorMsg = array();
 $mailed = false;
 $dataEntered = false;
+$dataEntered2 = false;
 
 print PHP_EOL . '<!-- SECTION: 2 Process for when the form is submitted -->' . PHP_EOL;
+
+
 if (isset($_POST["btnSubmit"])) {
     print PHP_EOL . '<!-- SECTION: 2a Security -->' . PHP_EOL;
     $thisURL = DOMAIN . PHP_SELF;
+
+
     if (!securityCheck($thisURL)) {
         $msg = '<p>Sorry you cannot access this page.</p>';
         $msg.= '<p>Security breach detected and reported.</p>';
         die($msg);
     }
+
+
     print PHP_EOL . '<!-- SECTION: 2b Sanitize (clean) data  -->' . PHP_EOL;
+//check if pmkTrailId > -1: true = update, false = new trail
     $pmkTrailsId = (int) htmlentities($_POST["hidtrailsId"], ENT_QUOTES, "UTF-8");
     if ($pmkTrailsId > 0) {
         $update = true;
-        $dataDelete [0] = $pmkTrailsId;
-        $DELETE = 'DELETE FROM tblTrailTags WHERE pfkTrailsId = ?';
-        if ($thisDatabaseReader->querySecurityOk($DELETE, 1)) {
-            $query = $thisDatabaseWriter->sanitizeQuery($DELETE);
-            $results = $thisDatabaseWriter->update($DELETE, $dataDelete);
-        }
     }
+//If there is a post of this name, assign a unique var from the specified value in the
+// post array
     if(isset($_POST["txtTrailName"]))
         $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
     if(isset($_POST["intTotalDistance"]))
         $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
     if(isset($_POST["HOURS"]))
         $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
-    if(isset($_POST["MIN"]))
-        $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
-    if(isset($_POST["SEC"]))
-        $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
     if(isset($_POST["txtVerticalRise"]))
         $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
     if(isset($_POST["txtRating"]))
         $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
+
+    //Concatenate HHMMSS to form proper SQL format
     if(isset($_POST["HOURS"]) && isset($_POST["MIN"]) && isset($_POST["SEC"]))
         $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
 
-
+//Holds unique int of post array that correlates to the checked boxes
     $Checked = [];
+//Holds the string name that matches the checked boxes
     $CheckedName = [];
 
-
+//Populates Checked and CheckedName array if box is checked
     if(isset($_POST["chkEasy"])){
         $easy = htmlentities($_POST["chkEasy"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $easy);
@@ -157,6 +184,8 @@ if (isset($_POST["btnSubmit"])) {
 
 
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
+
+//Must be characters and not null
     if ($trailName == "") {
         $errorMsg[] = "Please enter your first name";
         $trailNameERROR = true;
@@ -164,61 +193,93 @@ if (isset($_POST["btnSubmit"])) {
         $errorMsg[] = "Your first name appears to have extra character.";
         $trailNameERROR = true;
     }
+//Distance must not be null
     if ($totalDistance == "") {
         $errorMsg[] = "Enter Distance";
         $totalDistanceERROR = true;
+    }elseif ($totalDistance < 0){
+        $errorMsg[] = "Distance must be greater than 0";
+        $totalDistanceERROR = true;
     }
+//must take longer than 0 seconds
     if($HOUR < 0 || $MIN < 0 || $SEC < 0){
         $errorMsg[] = "Cannot Enter a Negative Number";
     }
+//Each box for Time must be in HHMMSS format
     if(strlen($hikingTime) > 9 || strlen($hikingTime)<8){
         $errorMsg[] = "Format must be HH:MM:SS";
         $hikingTimeERROR = true;
     }elseif($hikingTime == "00:00:00"){
         $errorMsg[] = "Must be more than no time";
     }
+//Must not be null nor negative
     if($verticalRise == ""){
         $errorMsg[] = "Enter the trail's Height";
         $verticalRiseERROR = true;
+    }elseif ($verticalRise<0){
+        $errorMsg[] = "No negative values allowed";
+        $verticalRiseERROR = true;
     }
+//rating must be checked
     if($rating == ""){
         $errorMsg[] = "Enter the trail's Difficulty ";
         $ratingERROR = true;
     }
+//At least one tag must be selected
+    if(empty($CheckedName)){
+        $errorMsg[] = "Select at least one tag ";
+        $ratingERROR = true;
+    }
+
+
     print PHP_EOL . '<!-- SECTION: 2d Process Form - Passed Validation -->' . PHP_EOL;
     if (!$errorMsg) {
         if (DEBUG) {
             print "<p>Form is valid</p>";
         }
         print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
+//Default Bools
         $dataEntered = false;
         $dataEntered2 = false;
+
+//create data arrays to populate ? in querys
         $data = array();
         $data2 = array();
+
+//Populate data array for insert query params
         $data[] = $trailName;
         $data[] = $totalDistance;
         $data[] = $hikingTime;
         $data[] = $verticalRise;
         $data[] = $rating;
         try {
+            //Database connected?
             $thisDatabaseWriter->db->beginTransaction();
+//if update delete all matching pfkTid's
+//&& create update query
+//else create insert Query
             if ($update) {
+                $dataDelete [0] = $pmkTrailsId;
+                $DELETE = 'DELETE FROM tblTrailTags WHERE pfkTrailsId = ?';
+                if ($thisDatabaseReader->querySecurityOk($DELETE, 1)) {
+                    $query = $thisDatabaseWriter->sanitizeQuery($DELETE);
+                    $results = $thisDatabaseWriter->update($DELETE, $dataDelete);
+                }
                 $query = 'UPDATE tblTrails SET ';
             } else {
                 $query = 'INSERT INTO tblTrails SET ';
             }
+//concatenate fields for query params
             $query .= 'fldTrailName = ?, ';
             $query .= 'fldTotalDistance = ?, ';
             $query .= 'fldHikingTime = ?, ';
             $query .= 'fldVerticalRise = ?, ';
             $query .= 'fldRating = ? ';
-            //This is where we will be inserting into table TrailTags
 
-
+//create query to insert tags
             $query2 = 'INSERT INTO tblTrailTags SET ';
             $query2 .= 'pfkTrailsId = ?, ';
             $query2 .= 'pfkTag = ? ';
-
 
             if (DEBUG) {
                 $thisDatabaseWriter->TestSecurityQuery($query, 0);
@@ -227,7 +288,8 @@ if (isset($_POST["btnSubmit"])) {
                 print_r($data2);
             }
 
-
+//If update update tblTrails where pmkTrails id matches
+// && add all tags checked to TTT
             if ($update) {
                 $query .= 'WHERE pmkTrailsId = ?';
                 $data[] = $pmkTrailsId;
@@ -235,6 +297,7 @@ if (isset($_POST["btnSubmit"])) {
                     $query = $thisDatabaseWriter->sanitizeQuery($query);
                     $results = $thisDatabaseWriter->update($query, $data);
                 }
+
                 if ($thisDatabaseReader->querySecurityOk($query2, 0)) {
                     $data2[0] = $pmkTrailsId;
                     foreach($CheckedName as $name){
@@ -243,13 +306,13 @@ if (isset($_POST["btnSubmit"])) {
                         $results = $thisDatabaseWriter->insert($query2, $data2);
                     }
                 }
+//If not update insert new trail values and tags checked with it
             } else {
                 if ($thisDatabaseWriter->querySecurityOk($query, 0)) {
                     $query = $thisDatabaseWriter->sanitizeQuery($query);
                     $results = $thisDatabaseWriter->insert($query, $data);
                     $primaryKey = $thisDatabaseWriter->lastInsert();
                 }
-//
                 if ($thisDatabaseWriter->querySecurityOk($query2, 0)) {
                     $data2[0] = $primaryKey;
                     foreach($CheckedName as $name){
@@ -259,12 +322,14 @@ if (isset($_POST["btnSubmit"])) {
                     }
                 }
             }
+
             if (DEBUG) {
                 print "<p>pmk= " . $primaryKey;
             }
             // all sql statements are done so lets commit to our changes
             $dataEntered = $thisDatabaseWriter->db->commit();
-            $dataEntered2 = $thisDatabaseWriter->db->commit();
+
+
             if (DEBUG)
                 print "<p>transaction complete ";
         } catch (PDOExecption $e) {
@@ -283,11 +348,12 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
     <article id="main">
         <?php
         print PHP_EOL . '<!-- SECTION 3a  -->' . PHP_EOL;
-        if ($dataEntered) { // closing of if marked with: end body submit
+        if ($dataEntered && $dataEntered2) { // closing of if marked with: end body submit
             print "<h1>Record Saved</h1> ";
             // Display the message you created in in SECTION: 2f
         } else {
             print PHP_EOL . '<!-- SECTION 3b Error Messages -->' . PHP_EOL;
+
             if ($errorMsg) {
                 print '<div id="errors">' . PHP_EOL;
                 print '<h2>Your form has the following mistakes that need to be fixed.</h2>' . PHP_EOL;
@@ -299,7 +365,20 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
                 print '</div>' . PHP_EOL;
             }
             print PHP_EOL . '<!-- SECTION 3c html Form -->' . PHP_EOL;
+
+        if (isset($_POST["btnSubmit"]) AND empty($errorMsg)) { // closing of if marked with: end body submit
+            print '<h3>JUST RECORDED: </h3>';
+            print "Trail Name: ". $trailName . '<br>';
+            print "Trail Distance: " . $totalDistance . '<br>';
+            print "Trail Time: " . $hikingTime . '<br>';
+            print "Height: " . $verticalRise . '<br>';
+            foreach($CheckedName as $name){
+                print "Tag Checked: " . $name . "<br>";
+            }
+        }else{
             ?>
+
+
 
 
             <h2>Trails</h2>
@@ -308,8 +387,6 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
             <form action="<?php print PHP_SELF; ?>"
                   method="post"
                   id="frmRegister">
-
-
                 <input type="hidden" id="hidtrailsId" name="hidtrailsId"
                        value="<?php print $pmkTrailsId; ?>"
                 >
@@ -464,33 +541,36 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
                     </p>
 
-                    <label>Pick Applicable Tags: </label>
 
+<p>
+    <label>Pick Applicable Tags: </label>
                     <?php
                     $i = 0;
                     foreach($tagSet as $tag){
+                        //label, id, and name == spaces stripped and concatenated chk in begining of string
                         print "\t" . '<label for="chk' . str_replace(" ", "", $tag["pmkTag"]) . '"><input type="checkbox" ';
                         print ' id="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
                         print ' name="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
+                        //Display default Checks
                         if ($tag["fldBinary"]) {
                             print ' checked ';
                         }
-                        // the value is the index number of the hobby array
+                        // the value is the index number of the $tag array
                         print 'value="' . $i++ . '">' . $tag["pmkTag"];
                         print '</label>';
                     }
                     ?>
+</p>
 
 
                 </fieldset>
-
-
                 <fieldset class="buttons">
                     <input type="submit" id="btnSubmit" name="btnSubmit" value="Save" tabindex="900" class="button">
                 </fieldset> <!-- ends buttons -->
             </form>
             <?php
-        } // end body submit
+        }
+        }// end body submit
         ?>
     </article>
 </main>

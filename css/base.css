@@ -4,9 +4,6 @@
 */
 @import url('reset.css');
 /*------------------------   standard elements  ----------------------------- */
-body{
-    margin: 0 5% 0 5%;
-}
 article{
     padding: 2em;
 }
@@ -24,11 +21,23 @@ figure{
 }
 footer{
     clear: both;
+    color: #335680;
 }
 
 h1{
-    text-align: Center;
+    margin-left: 43%;
     font-size: 50px;
+    color: #d8ffff;
+}
+h2{
+    text-align: center;
+    font-size: 25px;
+    font-weight: bolder;
+    color: #d8ffff;
+}
+h3{
+    font-size: 18px;
+    font-weight: bold;
 }
 h1, h2, h3, h4, h5, h6{
     padding: 1.5em 0 .8em 0;
@@ -55,15 +64,27 @@ section{
     width: 40%;  
 }
 
+label{
+    margin: 0 4px 0 4px;
+}
+nav{
+    text-align: center;
+}
+fieldset {
+    color: #8bceef;
+}
+td{
+    background: white;
+}
+th {
+    color: wheat;
+}
 /*------------------------   classes           ------------------------------ */
 
 p:nth-child(odd){
-    background-color: whitesmoke;
+    background-color: #f5f5f578;
 }
 
-p:nth-child(even){
-    background-color: lightcyan;
-}
 
 .float_right {
     float: right;
@@ -87,6 +108,11 @@ nav ol li{
     display: inline-block;
     list-style-type: none;
     padding-right: 2em;
+}
+
+li {
+    color: #b31515;
+    text-align: CENTER;
 }
 
 /*------------------------   table page  only  ------------------------------ */
@@ -115,8 +141,53 @@ nav ol li{
 #table th{
     text-align: left;
 }
+#submitPic{
+    float: right;
+    height: 300px;
+    margin-bottom: 40px;
+}
+input#btnSubmit {
+    background-color: white;
+    border-radius: 5px;
+}
 
 body p.noticeMe{
     background-color: #cc0033;
     color: wheat;
+}
+
+body{
+    font-family: "Lato", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.7;
+    background: rgba(0, 0, 0, 0.98);  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #434343, rgb(0, 0, 0));  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #434343, rgb(0, 0, 0)); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+    padding: 30px;
+}
+
+.header{
+    height: 75vh;
+    background-image: linear-gradient(to right bottom, rgba(210, 197, 201, 0.8), rgba(124, 124, 124, 0.82)) ,url(../images/Main.jpg);
+    /* what ever width of element it will always fit wlement inside of box */
+    background-size: cover;
+    background-position: top;
+
+    position: relative;
+}
+
+input[type=checkbox], input[type=radio] {
+    margin: 0 5px 0px 6px;
+    margin-top: 1px\9;
+    line-height: normal;
+}
+
+p:nth-child(odd) {
+     background-color: #b5b5b5d4;
+ }
+
+p:nth-child(even) {
+    background-color: white;
 }
