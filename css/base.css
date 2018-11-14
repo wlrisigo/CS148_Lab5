@@ -57,7 +57,8 @@ img{
 }
 
 p{
-    padding: 1em 0 1em 0;   
+    padding: 1em 0 1em 0;
+    color: #8bceef;
 }
 section{
     padding: 2em;
@@ -146,6 +147,11 @@ li {
     height: 300px;
     margin-bottom: 40px;
 }
+
+#isAdmin{
+    background: white;
+    border-radius: 3px;
+}
 input#btnSubmit {
     background-color: white;
     border-radius: 5px;
@@ -182,12 +188,4 @@ input[type=checkbox], input[type=radio] {
     margin: 0 5px 0px 6px;
     margin-top: 1px\9;
     line-height: normal;
-}
-
-p:nth-child(odd) {
-     background-color: #b5b5b5d4;
- }
-
-p:nth-child(even) {
-    background-color: white;
 }

@@ -27,8 +27,6 @@ if (DEBUG) {
     print_r($records);
     print '</pre></p>';
 }
-
-print '<h2 class="alternateRows">Meet the Trails!</h2>';
 if (is_array($records)) {
     foreach ($records as $record) {
         print '<p>' . $record['fldTrailName'] . ' <b>Rating:  </b>' . $record['fldRating'] . '</p>';
@@ -36,7 +34,7 @@ if (is_array($records)) {
 }
 
 if($isAdmin){
-    print '<a href= "https://wrisigo.w3.uvm.edu/cs148/dev-lab5/form.php"> EDIT </a>';
+    print '<a id = "isAdmin" href= "https://wrisigo.w3.uvm.edu/cs148/dev-lab5/form.php"> EDIT </a>';
 }
 
 
