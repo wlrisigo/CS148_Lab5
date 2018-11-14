@@ -61,6 +61,7 @@ if (isset($_GET["id"])) {
         }
         unset($tagging);
     }
+
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
     $hikingTime = $trails[0]["fldHikingTime"];
@@ -80,6 +81,7 @@ print PHP_EOL . '<!-- SECTION: 1d misc variables -->' . PHP_EOL;
 $errorMsg = array();
 $mailed = false;
 $dataEntered = false;
+
 print PHP_EOL . '<!-- SECTION: 2 Process for when the form is submitted -->' . PHP_EOL;
 if (isset($_POST["btnSubmit"])) {
     print PHP_EOL . '<!-- SECTION: 2a Security -->' . PHP_EOL;
@@ -122,33 +124,33 @@ if (isset($_POST["btnSubmit"])) {
     $CheckedName = [];
 
 
-    if(isset($_POST["chkeasy"])){
-        $easy = htmlentities($_POST["chkeasy"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["chkEasy"])){
+        $easy = htmlentities($_POST["chkEasy"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $easy);
         array_push($CheckedName, "Easy");
     }
-    if(isset($_POST["chkdogsallowed"])){
-        $dogs = htmlentities($_POST["chkdogsallowed"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["chkDogsAllowed"])){
+        $dogs = htmlentities($_POST["chkDogsAllowed"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $dogs);
         array_push($CheckedName, "Dogs Allowed");
     }
-    if(isset($_POST["chkhiking"])){
-        $hikable = htmlentities($_POST["chkhiking"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["chkHiking"])){
+        $hikable = htmlentities($_POST["chkHiking"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $hikable);
         array_push($CheckedName, "Hiking");
     }
-    if(isset($_POST["chkhard"])){
-        $hard = htmlentities($_POST["chkhard"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["chkHard"])){
+        $hard = htmlentities($_POST["chkHard"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $hard);
         array_push($CheckedName, "Hard");
     }
-    if(isset($_POST["chkskiing"])){
-        $skiing = htmlentities($_POST["chkskiing"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["chkSkiing"])){
+        $skiing = htmlentities($_POST["chkSkiing"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $skiing);
         array_push($CheckedName, "Skiing");
     }
-    if(isset($_POST["chkviews"])){
-        $views = htmlentities($_POST["chkviews"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["chkViews"])){
+        $views = htmlentities($_POST["chkViews"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $views);
         array_push($CheckedName, "Views");
     }
@@ -211,15 +213,21 @@ if (isset($_POST["btnSubmit"])) {
             $query .= 'fldVerticalRise = ?, ';
             $query .= 'fldRating = ? ';
             //This is where we will be inserting into table TrailTags
+
+
             $query2 = 'INSERT INTO tblTrailTags SET ';
             $query2 .= 'pfkTrailsId = ?, ';
             $query2 .= 'pfkTag = ? ';
+
+
             if (DEBUG) {
                 $thisDatabaseWriter->TestSecurityQuery($query, 0);
                 $thisDatabaseWriter->TestSecurityQuery($query2, 0);
                 print_r($data);
                 print_r($data2);
             }
+
+
             if ($update) {
                 $query .= 'WHERE pmkTrailsId = ?';
                 $data[] = $pmkTrailsId;
