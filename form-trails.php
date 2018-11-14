@@ -2,20 +2,13 @@
 include 'top.php';
 print PHP_EOL . '<!-- SECTION: 1 Initialize variables -->' . PHP_EOL;
 $update = false;
-
-
 print PHP_EOL . '<!-- SECTION: 1a. debugging setup -->' . PHP_EOL;
-
-
 //if (DEBUG) {
 print '<p>Post Array:</p><pre>';
 print_r($_POST);
 print '</pre>';
 //}
-
-
 print PHP_EOL . '<!-- SECTION: 1b form variables -->' . PHP_EOL;
-
 $dataDelete =[];
 $primaryKey = 0;
 $pmkTrailsId = -1;
@@ -34,14 +27,11 @@ $HOURS = "00";
 $MIN = "00";
 $SEC = "00";
 $alreadyChosen = array();
-
 $getTags = 'SELECT pmkTag, fldBinary FROM tblTags';
 if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
     $query = $thisDatabaseReader->sanitizeQuery($getTags);
     $tagSet = $thisDatabaseReader->select($getTags);
 }
-
-
 // If the form is an update we need to initial the values from the table
 if (isset($_GET["id"])) {
     $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
@@ -52,7 +42,6 @@ if (isset($_GET["id"])) {
         $query = $thisDatabaseReader->sanitizeQuery($query);
         $trails = $thisDatabaseReader->select($query, $data);
     }
-
     $queryTags = "SELECT * FROM tblTrailTags ";
     $queryTags .= "WHERE pfkTrailsId = ?";
     $trailTagsData = array($pmkTrailsId);
@@ -60,21 +49,18 @@ if (isset($_GET["id"])) {
         $queryTags = $thisDatabaseReader->sanitizeQuery($queryTags);
         $trailTags = $thisDatabaseReader->select($queryTags, $trailTagsData);
     }
-
     $count = 0;
-
     //makes checkboxes sticky and populates an array holding just the tags
-for($count; $count < count($trailTags); $count++) {
-    array_push($alreadyChosen,$trailTags[$count]["pfkTag"]);
-    foreach ($tagSet as &$tagging) {
-        if ($tagging["pmkTag"] == $trailTags[$count]["pfkTag"]) {
-            $tagging["fldBinary"] = 1;
-            $tagging[1] = 1;
+    for($count; $count < count($trailTags); $count++) {
+        array_push($alreadyChosen,$trailTags[$count]["pfkTag"]);
+        foreach ($tagSet as &$tagging) {
+            if ($tagging["pmkTag"] == $trailTags[$count]["pfkTag"]) {
+                $tagging["fldBinary"] = 1;
+                $tagging[1] = 1;
+            }
         }
+        unset($tagging);
     }
-    unset($tagging);
-}
-
     $trailName = $trails[0]["fldTrailName"];
     $totalDistance = $trails[0]["fldTotalDistance"];
     $hikingTime = $trails[0]["fldHikingTime"];
@@ -85,52 +71,34 @@ for($count; $count < count($trailTags); $count++) {
     $SEC=substr($hikingTime, 6,2);
 }
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
-
 $trailNameERROR = false;
 $totalDistanceERROR = false;
 $hikingTimeERROR = false;
 $verticalRiseERROR = false;
 $ratingERROR = false;
-
 print PHP_EOL . '<!-- SECTION: 1d misc variables -->' . PHP_EOL;
-
-
 $errorMsg = array();
 $mailed = false;
 $dataEntered = false;
-
-
 print PHP_EOL . '<!-- SECTION: 2 Process for when the form is submitted -->' . PHP_EOL;
-
-
 if (isset($_POST["btnSubmit"])) {
-
     print PHP_EOL . '<!-- SECTION: 2a Security -->' . PHP_EOL;
-
-
     $thisURL = DOMAIN . PHP_SELF;
     if (!securityCheck($thisURL)) {
         $msg = '<p>Sorry you cannot access this page.</p>';
         $msg.= '<p>Security breach detected and reported.</p>';
         die($msg);
     }
-
-
     print PHP_EOL . '<!-- SECTION: 2b Sanitize (clean) data  -->' . PHP_EOL;
-
-
     $pmkTrailsId = (int) htmlentities($_POST["hidtrailsId"], ENT_QUOTES, "UTF-8");
     if ($pmkTrailsId > 0) {
         $update = true;
-
         $dataDelete [0] = $pmkTrailsId;
         $DELETE = 'DELETE FROM tblTrailTags WHERE pfkTrailsId = ?';
-
         if ($thisDatabaseReader->querySecurityOk($DELETE, 1)) {
             $query = $thisDatabaseWriter->sanitizeQuery($DELETE);
             $results = $thisDatabaseWriter->update($DELETE, $dataDelete);
         }
-
     }
     if(isset($_POST["txtTrailName"]))
         $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
@@ -153,46 +121,40 @@ if (isset($_POST["btnSubmit"])) {
     $Checked = [];
     $CheckedName = [];
 
+
     if(isset($_POST["chkeasy"])){
         $easy = htmlentities($_POST["chkeasy"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "$easy");
-        array_push($CheckedName, "easy");
+        array_push($Checked, $easy);
+        array_push($CheckedName, "Easy");
     }
     if(isset($_POST["chkdogsallowed"])){
         $dogs = htmlentities($_POST["chkdogsallowed"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "$dogs");
-        array_push($CheckedName, "dogs allowed");
+        array_push($Checked, $dogs);
+        array_push($CheckedName, "Dogs Allowed");
     }
     if(isset($_POST["chkhiking"])){
         $hikable = htmlentities($_POST["chkhiking"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "$hikable");
-        array_push($CheckedName, "hiking");
+        array_push($Checked, $hikable);
+        array_push($CheckedName, "Hiking");
     }
     if(isset($_POST["chkhard"])){
         $hard = htmlentities($_POST["chkhard"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $hard);
-        array_push($CheckedName, "hard");
+        array_push($CheckedName, "Hard");
     }
     if(isset($_POST["chkskiing"])){
         $skiing = htmlentities($_POST["chkskiing"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "skiing");
-        array_push($CheckedName, "skiing");
+        array_push($Checked, $skiing);
+        array_push($CheckedName, "Skiing");
     }
     if(isset($_POST["chkviews"])){
         $views = htmlentities($_POST["chkviews"], ENT_QUOTES, "UTF-8");
-        array_push($Checked, "views");
-        array_push($CheckedName, "views");
-    }
-
-foreach ($tagSet as $tagging) {
-        print 'This is Tag: ' . $tagging['pmkTag'] . " | This is fldBinary: " . $tagging['fldBinary'] . " || ";
-
+        array_push($Checked, $views);
+        array_push($CheckedName, "Views");
     }
 
 
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
-
-
     if ($trailName == "") {
         $errorMsg[] = "Please enter your first name";
         $trailNameERROR = true;
@@ -222,16 +184,11 @@ foreach ($tagSet as $tagging) {
         $ratingERROR = true;
     }
     print PHP_EOL . '<!-- SECTION: 2d Process Form - Passed Validation -->' . PHP_EOL;
-
-
     if (!$errorMsg) {
         if (DEBUG) {
             print "<p>Form is valid</p>";
         }
-
-    print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
-
-
+        print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
         $dataEntered = false;
         $dataEntered2 = false;
         $data = array();
@@ -241,7 +198,6 @@ foreach ($tagSet as $tagging) {
         $data[] = $hikingTime;
         $data[] = $verticalRise;
         $data[] = $rating;
-
         try {
             $thisDatabaseWriter->db->beginTransaction();
             if ($update) {
@@ -254,31 +210,23 @@ foreach ($tagSet as $tagging) {
             $query .= 'fldHikingTime = ?, ';
             $query .= 'fldVerticalRise = ?, ';
             $query .= 'fldRating = ? ';
-
             //This is where we will be inserting into table TrailTags
             $query2 = 'INSERT INTO tblTrailTags SET ';
             $query2 .= 'pfkTrailsId = ?, ';
             $query2 .= 'pfkTag = ? ';
-
-
             if (DEBUG) {
                 $thisDatabaseWriter->TestSecurityQuery($query, 0);
                 $thisDatabaseWriter->TestSecurityQuery($query2, 0);
                 print_r($data);
                 print_r($data2);
             }
-
             if ($update) {
                 $query .= 'WHERE pmkTrailsId = ?';
                 $data[] = $pmkTrailsId;
-
-
                 if ($thisDatabaseReader->querySecurityOk($query, 1)) {
                     $query = $thisDatabaseWriter->sanitizeQuery($query);
                     $results = $thisDatabaseWriter->update($query, $data);
                 }
-
-
                 if ($thisDatabaseReader->querySecurityOk($query2, 0)) {
                     $data2[0] = $pmkTrailsId;
                     foreach($CheckedName as $name){
@@ -287,8 +235,6 @@ foreach ($tagSet as $tagging) {
                         $results = $thisDatabaseWriter->insert($query2, $data2);
                     }
                 }
-
-
             } else {
                 if ($thisDatabaseWriter->querySecurityOk($query, 0)) {
                     $query = $thisDatabaseWriter->sanitizeQuery($query);
