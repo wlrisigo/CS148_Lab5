@@ -134,8 +134,17 @@ if (isset($_POST["btnSubmit"])) {
         $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
     if(isset($_POST["intTotalDistance"]))
         $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
+
+//Get hh mm ss seperate then concatenate
     if(isset($_POST["HOURS"]))
         $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["MIN"]))
+        $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
+    if(isset($_POST["SEC"]))
+        $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
+
+
+
     if(isset($_POST["txtVerticalRise"]))
         $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
     if(isset($_POST["txtRating"]))
@@ -381,7 +390,7 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 
 
 
-            <h2>Trails</h2>
+            <h2>Add Trails</h2>
 
 
             <form action="<?php print PHP_SELF; ?>"
