@@ -50,7 +50,6 @@ if ($thisDatabaseReader->querySecurityOk($mountainQuery, 0)) {
 //%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%
 //
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
-//
 // Initialize Error Flags one for each form element we validate
 // in the order they appear on the form
 $hikerERROR = false;
