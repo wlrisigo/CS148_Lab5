@@ -23,6 +23,8 @@ print  PHP_EOL . '<!-- SECTION: 1a. debugging setup -->' . PHP_EOL;
 
 //%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%^%
 //
+
+if($isAdmin){
 print PHP_EOL . '<!-- SECTION: 1b form variables -->' . PHP_EOL;
 //
 // Initialize variables one for each form element
@@ -40,8 +42,8 @@ if ($thisDatabaseReader->querySecurityOk($hikeQuery, 0)) {
 $date = "";
 
 if ($thisDatabaseReader->querySecurityOk($mountainQuery, 0)) {
-                 $mountainQuery = $thisDatabaseReader->sanitizeQuery($mountainQuery);           
-                 $mountains = $thisDatabaseReader->select($mountainQuery, '');        
+    $mountainQuery = $thisDatabaseReader->sanitizeQuery($mountainQuery);
+    $mountains = $thisDatabaseReader->select($mountainQuery, '');
 }
 
 
@@ -62,8 +64,8 @@ print PHP_EOL . '<!-- SECTION: 1d misc variables -->' . PHP_EOL;
 // create array to hold error messages filled (if any) in 2d displayed in 3c.
 $errorMsg = array();
 $mailed = false;
-$dataEntered = false; 
- 
+$dataEntered = false;
+
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //
 print PHP_EOL . '<!-- SECTION: 2 Process for when the form is submitted -->' . PHP_EOL;
@@ -73,13 +75,13 @@ if (isset($_POST["btnSubmit"])) {
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //
     print PHP_EOL . '<!-- SECTION: 2a Security -->' . PHP_EOL;
-    
+
     // the url for this form
     $thisURL = DOMAIN . PHP_SELF;
-    
+
     if (!securityCheck($thisURL)) {
         $msg = '<p>Sorry you cannot access this page.</p>';
-        $msg.= '<p>Security breach detected and reported.</p>';
+        $msg .= '<p>Security breach detected and reported.</p>';
         die($msg);
     }
 
@@ -88,15 +90,15 @@ if (isset($_POST["btnSubmit"])) {
     print PHP_EOL . '<!-- SECTION: 2b Sanitize (clean) data  -->' . PHP_EOL;
     // remove any potential JavaScript or html code from users input on the
     // form. Note it is best to follow the same order as declared in section 1c.
-   if(isset($_POST["selectedHiker"]))
+    if (isset($_POST["selectedHiker"]))
         $xHiker = htmlentities($_POST["selectedHiker"], ENT_QUOTES, "UTF-8");
 
-   if(isset($_POST["txtDate"]))
-        $date = htmlentities($_POST["txtDate"], ENT_QUOTES, "UTF-8"); 
-    
-    if(isset($_POST["Trails"]))
+    if (isset($_POST["txtDate"]))
+        $date = htmlentities($_POST["txtDate"], ENT_QUOTES, "UTF-8");
+
+    if (isset($_POST["Trails"]))
         $trailClicked = htmlentities($_POST["Trails"], ENT_QUOTES, "UTF-8");
-    
+
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //
     print PHP_EOL . '<!-- SECTION: 2c Validation -->' . PHP_EOL;
@@ -108,25 +110,22 @@ if (isset($_POST["btnSubmit"])) {
     // will be in the order they appear. errorMsg will be displayed on the form
     // see section 3b. The error flag ($emailERROR) will be used in section 3c.
 
-    if($xHiker = ""){
+    if ($xHiker = "") {
         $errorMsg[] = "Please select a Hiker";
         $hikerERROR = true;
     }
-    if($date == ""){
+    if ($date == "") {
         $errorMsg[] = "Please Enter the Date";
         $dateError = true;
-    }
-    elseif (!validateDate($date)) {
+    } elseif (!validateDate($date)) {
         $errorMsg[] = "Invalid Date Entry";
         $dateError = true;
     }
 
-    if(empty($trailClicked)){
+    if (empty($trailClicked)) {
         $errorMsg[] = "Please select a Mountain";
         $trailERROR = true;
     }
-
-
 
 
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -137,34 +136,33 @@ if (isset($_POST["btnSubmit"])) {
     //    
     if (!$errorMsg) {
         if (DEBUG)
-                print '<p>Form is valid</p>';
-    
+            print '<p>Form is valid</p>';
+
         print PHP_EOL . '<!-- SECTION: 2e Save Data -->' . PHP_EOL;
-        
+
         $dataEntered = false;
         $dataRecord = array();
-      
-         $dataRecord[] = $xHiker;
+
+        $dataRecord[] = $xHiker;
         $dataRecord[] = $date;
         $dataRecord[] = $trailClicked;
 
-        
-        
-        try{
+
+        try {
             $thisDatabaseWriter->db->beginTransaction();
-            
+
             $query = 'INSERT INTO tblHikersTrails SET '
                 . 'fnkHikersId = ?, '
                 . 'fnkTrailsId = ?, '
                 . 'fldDateHiked = ?';
-            if(DEBUG){
-                 $thisDatabaseWriter->TestSecurityQuery($query, 0);
+            if (DEBUG) {
+                $thisDatabaseWriter->TestSecurityQuery($query, 0);
                 print_r($dataRecord);
             }
-        
-             if ($thisDatabaseWriter->querySecurityOk($query, 0)) {
+
+            if ($thisDatabaseWriter->querySecurityOk($query, 0)) {
                 $query = $thisDatabaseWriter->sanitizeQuery($query);
-                
+
                 $results = $thisDatabaseWriter->insert($query, $dataRecord);
                 $primaryKey = $thisDatabaseWriter->lastInsert();
 
@@ -174,195 +172,191 @@ if (isset($_POST["btnSubmit"])) {
             }
 
 
-             $dataEntered = $thisDatabaseWriter->db->commit();
-                if (DEBUG)
+            $dataEntered = $thisDatabaseWriter->db->commit();
+            if (DEBUG)
                 print "<p>transaction complete ";
-                 
-            
-   
-            
+
+
         } catch (PDOExecption $e) {
             $thisDatabase->db->rollback();
             if (DEBUG)
                 print "Error!: " . $e->getMessage() . "</br>";
             $errorMsg[] = "There was a problem with accepting your data please contact us directly.";
         }
-       
-    
-     
+
+
         //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         //
         print PHP_EOL . '<!-- SECTION: 2f Create message -->' . PHP_EOL;
         //
         // build a message to display on the screen in section 3a and to mail
         // to the person filling out the form (section 2g).
-        
-        
-        
+
 
     } // end form is valid     
 
 }   // ends if form was submitted.
 
 
-
 //#############################################################################
 //
 print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
 //
-?>       
-<main>     
+?>
+<main>
     <article>
-<?php
-    //####################################
-    //
-    print PHP_EOL . '<!-- SECTION 3a  -->' . PHP_EOL;
-    // 
-    // If its the first time coming to the form or there are errors we are going
-    // to display the form.
-    
-    if (isset($_POST["btnSubmit"]) AND empty($errorMsg)) { // closing of if marked with: end body submit
-        print '<h2>Thank you for providing your information.</h2>';
-    
-
-    } else {       
-     print '<h2>Add Your Hike</h2>';
-     
+        <?php
         //####################################
         //
-        print PHP_EOL . '<!-- SECTION 3b Error Messages -->' . PHP_EOL;
+        print PHP_EOL . '<!-- SECTION 3a  -->' . PHP_EOL;
         //
-        // display any error messages before we print out the form
-   
-       if ($errorMsg) {    
-           print '<div id="errors">' . PHP_EOL;
-           print '<h2>Your form has the following mistakes that need to be fixed.</h2>' . PHP_EOL;
-           print '<ol>' . PHP_EOL;
+        // If its the first time coming to the form or there are errors we are going
+        // to display the form.
 
-           foreach ($errorMsg as $err) {
-               print '<li>' . $err . '</li>' . PHP_EOL;       
-           }
-
-            print '</ol>' . PHP_EOL;
-            print '</div>' . PHP_EOL;
-       }
-
-        //####################################
-        //
-        print PHP_EOL . '<!-- SECTION 3c html Form -->' . PHP_EOL;
-        //
-        /* Display the HTML form. note that the action is to this same page. $phpSelf
-            is defined in top.php
-            NOTE the line:
-            value="<?php print $email; ?>
-            this makes the form sticky by displaying either the initial default value (line ??)
-            or the value they typed in (line ??)
-            NOTE this line:
-            <?php if($emailERROR) print 'class="mistake"'; ?>
-            this prints out a css class so that we can highlight the background etc. to
-            make it stand out that a mistake happened here.
-       */
-?>    
-
-        
+        if (isset($_POST["btnSubmit"]) AND empty($errorMsg)) { // closing of if marked with: end body submit
+            print '<h2>Thank you for providing your information.</h2>';
 
 
-<form action = "<?php print PHP_SELF; ?>"
-          id = "frmRegister"
-          method = "post">
-      <fieldset>
-        <h3>List of Hikers</h3>
+        } else {
+            print '<h2>Add Your Hike</h2>';
 
-        <label for="lstHikers" 
-            <?php if($hikerERROR)
-            print 'class = "mistake"'; ?>
-        >Hiker
-            <select id="lstHikers"
-                    name="selectedHiker"
-                    tabindex = "300">
-            <?php
-             foreach ($hikers as $hiker) {
-            print '<p>';
-                print '<option ';
-                if ($currentHiker == $hiker["pmkHikersId"])
-                    print " selected='selected' ";
-                print 'value="' . $hiker["pmkHikersId"] . '">' . $hiker["fldFirstName"] . " " . $hiker["fldLastName"];
-                print '</option>';
-                print '</p>';
+            //####################################
+            //
+            print PHP_EOL . '<!-- SECTION 3b Error Messages -->' . PHP_EOL;
+            //
+            // display any error messages before we print out the form
 
-              }
-      ?>
-            </select></label>
-        </fieldset>
-    
-                <fieldset class = "contact">
+            if ($errorMsg) {
+                print '<div id="errors">' . PHP_EOL;
+                print '<h2>Your form has the following mistakes that need to be fixed.</h2>' . PHP_EOL;
+                print '<ol>' . PHP_EOL;
+
+                foreach ($errorMsg as $err) {
+                    print '<li>' . $err . '</li>' . PHP_EOL;
+                }
+
+                print '</ol>' . PHP_EOL;
+                print '</div>' . PHP_EOL;
+            }
+
+            //####################################
+            //
+            print PHP_EOL . '<!-- SECTION 3c html Form -->' . PHP_EOL;
+            //
+            /* Display the HTML form. note that the action is to this same page. $phpSelf
+                is defined in top.php
+                NOTE the line:
+                value="<?php print $email; ?>
+                this makes the form sticky by displaying either the initial default value (line ??)
+                or the value they typed in (line ??)
+                NOTE this line:
+                <?php if($emailERROR) print 'class="mistake"'; ?>
+                this prints out a css class so that we can highlight the background etc. to
+                make it stand out that a mistake happened here.
+           */
+            ?>
+
+
+            <form action="<?php print PHP_SELF; ?>"
+                  id="frmRegister"
+                  method="post">
+                <fieldset>
+                    <h3>List of Hikers</h3>
+
+                    <label for="lstHikers"
+                        <?php if ($hikerERROR)
+                            print 'class = "mistake"'; ?>
+                    >Hiker
+                        <select id="lstHikers"
+                                name="selectedHiker"
+                                tabindex="300">
+                            <?php
+                            foreach ($hikers as $hiker) {
+                                print '<p>';
+                                print '<option ';
+                                if ($currentHiker == $hiker["pmkHikersId"])
+                                    print " selected='selected' ";
+                                print 'value="' . $hiker["pmkHikersId"] . '">' . $hiker["fldFirstName"] . " " . $hiker["fldLastName"];
+                                print '</option>';
+                                print '</p>';
+
+                            }
+                            ?>
+                        </select></label>
+                </fieldset>
+
+                <fieldset class="contact">
                     <p>
-                        <label class="required" for="txtDate">Date</label>  
+                        <label class="required" for="txtDate">Date</label>
                         <input
-                               <?php //What type of data type is date? ?>
-                                <?php if ($dateERROR) 
-                                    print 'class="mistake"'; ?>
+                            <?php //What type of data type is date? ?>
+                            <?php if ($dateERROR)
+                                print 'class="mistake"'; ?>
                                 id="txtDate"
-                                name="txtDate"                              
+                                name="txtDate"
                                 tabindex="100"
                                 type="date"
-                                value ="<?php print $date; ?>"
-                        >                    
+                                value="<?php print $date; ?>"
+                        >
                     </p>
-                 <script>   
-                          var today = new Date();
-                    var dd = today.getDate();
-                    var mm = today.getMonth()+1; //January is 0!
-                    var yyyy = today.getFullYear();
-                     if(dd<10){
-                            dd='0'+dd
-                        } 
-                        if(mm<10){
-                            mm='0'+mm
-                        } 
+                    <script>
+                        var today = new Date();
+                        var dd = today.getDate();
+                        var mm = today.getMonth() + 1; //January is 0!
+                        var yyyy = today.getFullYear();
+                        if (dd < 10) {
+                            dd = '0' + dd
+                        }
+                        if (mm < 10) {
+                            mm = '0' + mm
+                        }
 
-                    today = yyyy+'-'+mm+'-'+dd;
-                    document.getElementById("txtDate").setAttribute("max", today);
-                </script>
-                       
+                        today = yyyy + '-' + mm + '-' + dd;
+                        document.getElementById("txtDate").setAttribute("max", today);
+                    </script>
+
                 </fieldset> <!-- ends contact -->
-                
-                <fieldset>
-        <h3>Chose Mountain</h3>
-            <?php
-             foreach ($mountains as $mountain) {
-                print '<input type = "radio"';
-                 if ($trailERROR)
-                     print 'class="mistake"';
-                print 'value="' . $mountain["pmkTrailsId"] . '" name="Trails" >' . $mountain["fldTrailName"];
-                print '<br>';
-              }
-      ?>
-                <script> 
-                var allRadios = document.getElementsByName('Trails');
-                var booRadio;
-                for(x = 0; x < allRadios.length; x++){
-                  allRadios[x].onclick = function() {
-                    if(booRadio == this){
-                      this.checked = false;
-                      booRadio = null;
-                    } else {
-                      booRadio = this;
-                    }
-                  };
-                }   
-                      
-                      </script>
-        </fieldset>
 
-            <fieldset class="buttons">
-                <legend></legend>
-                <input class = "button" id = "btnSubmit" name = "btnSubmit" tabindex = "900" type = "submit" value = "Add" >
-      
-            </fieldset> <!-- ends buttons -->
-</form>     
-<?php
-    } // ends body submit
+                <fieldset>
+                    <h3>Chose Mountain</h3>
+                    <?php
+                    foreach ($mountains as $mountain) {
+                        print '<input type = "radio"';
+                        if ($trailERROR)
+                            print 'class="mistake"';
+                        print 'value="' . $mountain["pmkTrailsId"] . '" name="Trails" >' . $mountain["fldTrailName"];
+                        print '<br>';
+                    }
+                    ?>
+                    <script>
+                        var allRadios = document.getElementsByName('Trails');
+                        var booRadio;
+                        for (x = 0; x < allRadios.length; x++) {
+                            allRadios[x].onclick = function () {
+                                if (booRadio == this) {
+                                    this.checked = false;
+                                    booRadio = null;
+                                } else {
+                                    booRadio = this;
+                                }
+                            };
+                        }
+
+                    </script>
+                </fieldset>
+
+                <fieldset class="buttons">
+                    <legend></legend>
+                    <input class="button" id="btnSubmit" name="btnSubmit" tabindex="900" type="submit" value="Add">
+
+                </fieldset> <!-- ends buttons -->
+            </form>
+            <?php
+        } // ends body submit
+
+        }else{
+            print '<p id = "NotPrivlaged"> YOU DO NOT HAVE ACCESS TO THIS</p>';
+        }
 ?>
     </article>     
 </main>     

@@ -39,9 +39,11 @@ if ($thisDatabaseReader->querySecurityOk($getTags, 0)) {
     $query = $thisDatabaseReader->sanitizeQuery($getTags);
     $tagSet = $thisDatabaseReader->select($getTags);
 }
+
+if($isAdmin){
 // If the form is an update we need to initial the values from the table
 if (isset($_GET["id"])) {
-    $pmkTrailsId = (int) htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
+    $pmkTrailsId = (int)htmlentities($_GET["id"], ENT_QUOTES, "UTF-8");
 //query to get values from tbl trails where pmk matches
     $query = 'SELECT fldTrailName, fldTotalDistance, fldHikingTime, fldVerticalRise, fldRating ';
     $query .= 'FROM tblTrails WHERE pmkTrailsId = ? ';
@@ -63,14 +65,14 @@ if (isset($_GET["id"])) {
         $trailTags = $thisDatabaseReader->select($queryTags, $trailTagsData);
     }
 //since its an update set all the fldBinary to false
-    foreach ($tagSet as &$tagging){
+    foreach ($tagSet as &$tagging) {
         $tagging["fldBinary"] = 0;
         $tagging[1] = 0;
     }
 
 
 //compare trailTags with tagSet and set fldBinary true when tagSet matches with trailTags
-    for($count= 0; $count < count($trailTags); $count++) {
+    for ($count = 0; $count < count($trailTags); $count++) {
         foreach ($tagSet as &$tagging) {
             if ($tagging["pmkTag"] == $trailTags[$count]["pfkTag"]) {
                 $tagging["fldBinary"] = 1;
@@ -86,9 +88,9 @@ if (isset($_GET["id"])) {
     $hikingTime = $trails[0]["fldHikingTime"];
     $verticalRise = $trails[0]["fldVerticalRise"];
     $rating = $trails[0]["fldRating"];
-    $HOURS=substr($hikingTime, 0,2);
-    $MIN=substr($hikingTime, 3,2);
-    $SEC=substr($hikingTime, 6,2);
+    $HOURS = substr($hikingTime, 0, 2);
+    $MIN = substr($hikingTime, 3, 2);
+    $SEC = substr($hikingTime, 6, 2);
 }
 print PHP_EOL . '<!-- SECTION: 1c form error flags -->' . PHP_EOL;
 
@@ -117,41 +119,40 @@ if (isset($_POST["btnSubmit"])) {
 
     if (!securityCheck($thisURL)) {
         $msg = '<p>Sorry you cannot access this page.</p>';
-        $msg.= '<p>Security breach detected and reported.</p>';
+        $msg .= '<p>Security breach detected and reported.</p>';
         die($msg);
     }
 
 
     print PHP_EOL . '<!-- SECTION: 2b Sanitize (clean) data  -->' . PHP_EOL;
 //check if pmkTrailId > -1: true = update, false = new trail
-    $pmkTrailsId = (int) htmlentities($_POST["hidtrailsId"], ENT_QUOTES, "UTF-8");
+    $pmkTrailsId = (int)htmlentities($_POST["hidtrailsId"], ENT_QUOTES, "UTF-8");
     if ($pmkTrailsId > 0) {
         $update = true;
     }
 //If there is a post of this name, assign a unique var from the specified value in the
 // post array
-    if(isset($_POST["txtTrailName"]))
+    if (isset($_POST["txtTrailName"]))
         $trailName = htmlentities($_POST["txtTrailName"], ENT_QUOTES, "UTF-8");
-    if(isset($_POST["intTotalDistance"]))
+    if (isset($_POST["intTotalDistance"]))
         $totalDistance = htmlentities($_POST["intTotalDistance"], ENT_QUOTES, "UTF-8");
 
 //Get hh mm ss seperate then concatenate
-    if(isset($_POST["HOURS"]))
+    if (isset($_POST["HOURS"]))
         $HOUR = htmlentities($_POST["HOURS"], ENT_QUOTES, "UTF-8");
-    if(isset($_POST["MIN"]))
+    if (isset($_POST["MIN"]))
         $MIN = htmlentities($_POST["MIN"], ENT_QUOTES, "UTF-8");
-    if(isset($_POST["SEC"]))
+    if (isset($_POST["SEC"]))
         $SEC = htmlentities($_POST["SEC"], ENT_QUOTES, "UTF-8");
 
 
-
-    if(isset($_POST["txtVerticalRise"]))
+    if (isset($_POST["txtVerticalRise"]))
         $verticalRise = htmlentities($_POST["txtVerticalRise"], ENT_QUOTES, "UTF-8");
-    if(isset($_POST["txtRating"]))
+    if (isset($_POST["txtRating"]))
         $rating = htmlentities($_POST["txtRating"], ENT_QUOTES, "UTF-8");
 
     //Concatenate HHMMSS to form proper SQL format
-    if(isset($_POST["HOURS"]) && isset($_POST["MIN"]) && isset($_POST["SEC"]))
+    if (isset($_POST["HOURS"]) && isset($_POST["MIN"]) && isset($_POST["SEC"]))
         $hikingTime = $HOUR . ':' . $MIN . ':' . $SEC;
 
 //Holds unique int of post array that correlates to the checked boxes
@@ -160,32 +161,32 @@ if (isset($_POST["btnSubmit"])) {
     $CheckedName = [];
 
 //Populates Checked and CheckedName array if box is checked
-    if(isset($_POST["chkEasy"])){
+    if (isset($_POST["chkEasy"])) {
         $easy = htmlentities($_POST["chkEasy"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $easy);
         array_push($CheckedName, "Easy");
     }
-    if(isset($_POST["chkDogsAllowed"])){
+    if (isset($_POST["chkDogsAllowed"])) {
         $dogs = htmlentities($_POST["chkDogsAllowed"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $dogs);
         array_push($CheckedName, "Dogs Allowed");
     }
-    if(isset($_POST["chkHiking"])){
+    if (isset($_POST["chkHiking"])) {
         $hikable = htmlentities($_POST["chkHiking"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $hikable);
         array_push($CheckedName, "Hiking");
     }
-    if(isset($_POST["chkHard"])){
+    if (isset($_POST["chkHard"])) {
         $hard = htmlentities($_POST["chkHard"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $hard);
         array_push($CheckedName, "Hard");
     }
-    if(isset($_POST["chkSkiing"])){
+    if (isset($_POST["chkSkiing"])) {
         $skiing = htmlentities($_POST["chkSkiing"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $skiing);
         array_push($CheckedName, "Skiing");
     }
-    if(isset($_POST["chkViews"])){
+    if (isset($_POST["chkViews"])) {
         $views = htmlentities($_POST["chkViews"], ENT_QUOTES, "UTF-8");
         array_push($Checked, $views);
         array_push($CheckedName, "Views");
@@ -206,36 +207,36 @@ if (isset($_POST["btnSubmit"])) {
     if ($totalDistance == "") {
         $errorMsg[] = "Enter Distance";
         $totalDistanceERROR = true;
-    }elseif ($totalDistance < 0){
+    } elseif ($totalDistance < 0) {
         $errorMsg[] = "Distance must be greater than 0";
         $totalDistanceERROR = true;
     }
 //must take longer than 0 seconds
-    if($HOUR < 0 || $MIN < 0 || $SEC < 0){
+    if ($HOUR < 0 || $MIN < 0 || $SEC < 0) {
         $errorMsg[] = "Cannot Enter a Negative Number";
     }
 //Each box for Time must be in HHMMSS format
-    if(strlen($hikingTime) > 9 || strlen($hikingTime)<8){
+    if (strlen($hikingTime) > 9 || strlen($hikingTime) < 8) {
         $errorMsg[] = "Format must be HH:MM:SS";
         $hikingTimeERROR = true;
-    }elseif($hikingTime == "00:00:00"){
+    } elseif ($hikingTime == "00:00:00") {
         $errorMsg[] = "Must be more than no time";
     }
 //Must not be null nor negative
-    if($verticalRise == ""){
+    if ($verticalRise == "") {
         $errorMsg[] = "Enter the trail's Height";
         $verticalRiseERROR = true;
-    }elseif ($verticalRise<0){
+    } elseif ($verticalRise < 0) {
         $errorMsg[] = "No negative values allowed";
         $verticalRiseERROR = true;
     }
 //rating must be checked
-    if($rating == ""){
+    if ($rating == "") {
         $errorMsg[] = "Enter the trail's Difficulty ";
         $ratingERROR = true;
     }
 //At least one tag must be selected
-    if(empty($CheckedName)){
+    if (empty($CheckedName)) {
         $errorMsg[] = "Select at least one tag ";
         $ratingERROR = true;
     }
@@ -309,8 +310,8 @@ if (isset($_POST["btnSubmit"])) {
 
                 if ($thisDatabaseReader->querySecurityOk($query2, 0)) {
                     $data2[0] = $pmkTrailsId;
-                    foreach($CheckedName as $name){
-                        $data2[1]  = $name;
+                    foreach ($CheckedName as $name) {
+                        $data2[1] = $name;
                         $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
                         $results = $thisDatabaseWriter->insert($query2, $data2);
                     }
@@ -324,8 +325,8 @@ if (isset($_POST["btnSubmit"])) {
                 }
                 if ($thisDatabaseWriter->querySecurityOk($query2, 0)) {
                     $data2[0] = $primaryKey;
-                    foreach($CheckedName as $name){
-                        $data2[1]  = $name;
+                    foreach ($CheckedName as $name) {
+                        $data2[1] = $name;
                         $query2 = $thisDatabaseWriter->sanitizeQuery($query2);
                         $results = $thisDatabaseWriter->insert($query2, $data2);
                     }
@@ -375,211 +376,211 @@ print PHP_EOL . '<!-- SECTION 3 Display Form -->' . PHP_EOL;
             }
             print PHP_EOL . '<!-- SECTION 3c html Form -->' . PHP_EOL;
 
-        if (isset($_POST["btnSubmit"]) AND empty($errorMsg)) { // closing of if marked with: end body submit
-            print '<h3>JUST RECORDED: </h3>';
-            print "Trail Name: ". $trailName . '<br>';
-            print "Trail Distance: " . $totalDistance . '<br>';
-            print "Trail Time: " . $hikingTime . '<br>';
-            print "Height: " . $verticalRise . '<br>';
-            foreach($CheckedName as $name){
-                print "Tag Checked: " . $name . "<br>";
+            if (isset($_POST["btnSubmit"]) AND empty($errorMsg)) { // closing of if marked with: end body submit
+                print '<h3>JUST RECORDED: </h3>';
+                print "Trail Name: " . $trailName . '<br>';
+                print "Trail Distance: " . $totalDistance . '<br>';
+                print "Trail Time: " . $hikingTime . '<br>';
+                print "Height: " . $verticalRise . '<br>';
+                foreach ($CheckedName as $name) {
+                    print "Tag Checked: " . $name . "<br>";
+                }
+            } else {
+                ?>
+
+
+                <h2>Add Trails</h2>
+
+
+                <form action="<?php print PHP_SELF; ?>"
+                      method="post"
+                      id="frmRegister">
+                    <input type="hidden" id="hidtrailsId" name="hidtrailsId"
+                           value="<?php print $pmkTrailsId; ?>"
+                    >
+
+                    <fieldset class="contact">
+                        <p>
+                            <label class="required">Trail Name</label>
+                            <input autofocus
+                                <?php if ($trailNameERROR)
+                                    print 'class="mistake"'; ?>
+                                   id="txtTrailName"
+                                   name="txtTrailName"
+                                   onfocus="this.select()"
+                                   placeholder="Enter Trail name"
+                                   tabindex="100"
+                                   type="text"
+                                   value="<?php print $trailName; ?>"
+                            >
+                        </p>
+
+                        <p>
+                            <label class="required">Distance (Miles)</label>
+                            <input
+                                <?php if ($totalDistanceERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="intTotalDistance"
+                                    name="intTotalDistance"
+                                    onfocus="this.select()"
+                                    tabindex="110"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value="<?php print $totalDistance; ?>"
+                            >
+                        </p>
+
+                        <p>
+                            <label class="required">Hiking Duration (hh:mm:ss)</label>
+                            <input
+                                <?php if ($hikingTimeERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="hr"
+                                    name="HOURS"
+                                    min="0"
+                                    max="24"
+                                    type="number"
+
+                                    value="<?php print $HOURS; ?>">
+                            <label>:</label>
+                            <input
+                                <?php if ($hikingTimeERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="min"
+                                    name="MIN"
+                                    min="0"
+                                    max="60"
+                                    type="number"
+                                    value="<?php print $MIN; ?>"
+                            >
+                            <label>:</label>
+                            <input
+                                <?php if ($hikingTimeERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="sec"
+                                    name="SEC"
+                                    min="0"
+                                    max="60"
+                                    type="number"
+                                    value="<?php print $SEC; ?>">
+
+
+                        </p>
+
+
+                        <p>
+                            <label class="required">Height (ft)</label>
+                            <input
+                                <?php if ($verticalRiseERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="txtVerticalRise"
+                                    name="txtVerticalRise"
+                                    tabindex="120"
+                                    type="number"
+                                    min="0"
+                                    max="5000"
+                                    value="<?php print $verticalRise; ?>"
+                            >
+                        </p>
+
+
+                        <p>
+                            <label class="required">Difficulty: </label>
+
+                            <input
+                                <?php if ($ratingERROR)
+                                    print 'class="mistake"';
+                                ?>
+                                    id="easy"
+                                    name="txtRating"
+                                    type="radio"
+                                <?php
+                                //if rating is Easy then make it sticky
+                                if ($rating == "Easy")
+                                    print "checked";
+                                ?>
+                                    value="Easy"
+                            > <span>Easy</span>
+
+                            <input
+                                <?php if ($ratingERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="moderate"
+                                    name="txtRating"
+                                    type="radio"
+                                <?php
+                                //if rating is Easy then make it sticky
+                                if ($rating == "Moderate")
+                                    print "checked";
+                                ?>
+                                    value="Moderate"
+                            > <span>Moderate</span>
+
+                            <input
+                                <?php if ($ratingERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="moderately-strenuous"
+                                    name="txtRating"
+                                    type="radio"
+                                <?php
+                                //if rating is Easy then make it sticky
+                                if ($rating == "Moderately Strenuous")
+                                    print "checked";
+                                ?>
+                                    value="Moderately Strenuous"
+                            > <span>Moderately Strenuous</span>
+
+                            <input
+                                <?php if ($ratingERROR)
+                                    print 'class="mistake"'; ?>
+                                    id="strenuous"
+                                    name="txtRating"
+                                    type="radio"
+                                <?php
+                                //if rating is Easy then make it sticky
+                                if ($rating == "Strenuous")
+                                    print "checked";
+                                ?>
+                                    value="Strenuous"
+                            > <span>Strenuous</span>
+
+                        </p>
+
+
+                        <p>
+                            <label>Pick Applicable Tags: </label>
+                            <?php
+                            $i = 0;
+                            foreach ($tagSet as $tag) {
+                                //label, id, and name == spaces stripped and concatenated chk in begining of string
+                                print "\t" . '<label for="chk' . str_replace(" ", "", $tag["pmkTag"]) . '"><input type="checkbox" ';
+                                print ' id="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
+                                print ' name="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
+                                //Display default Checks
+                                if ($tag["fldBinary"]) {
+                                    print ' checked ';
+                                }
+                                // the value is the index number of the $tag array
+                                print 'value="' . $i++ . '">' . $tag["pmkTag"];
+                                print '</label>';
+                            }
+                            ?>
+                        </p>
+
+
+                    </fieldset>
+                    <fieldset class="buttons">
+                        <input type="submit" id="btnSubmit" name="btnSubmit" value="Save" tabindex="900" class="button">
+                    </fieldset> <!-- ends buttons -->
+                </form>
+                <?php
             }
-        }else{
-            ?>
-
-
-
-
-            <h2>Add Trails</h2>
-
-
-            <form action="<?php print PHP_SELF; ?>"
-                  method="post"
-                  id="frmRegister">
-                <input type="hidden" id="hidtrailsId" name="hidtrailsId"
-                       value="<?php print $pmkTrailsId; ?>"
-                >
-
-                <fieldset class = "contact">
-                    <p>
-                        <label class="required">Trail Name</label>
-                        <input autofocus
-                            <?php if ($trailNameERROR)
-                                print 'class="mistake"'; ?>
-                               id="txtTrailName"
-                               name="txtTrailName"
-                               onfocus="this.select()"
-                               placeholder="Enter Trail name"
-                               tabindex="100"
-                               type="text"
-                               value="<?php print $trailName; ?>"
-                        >
-                    </p>
-
-                    <p>
-                        <label class="required">Distance (Miles)</label>
-                        <input
-                            <?php if ($totalDistanceERROR)
-                                print 'class="mistake"'; ?>
-                                id="intTotalDistance"
-                                name="intTotalDistance"
-                                onfocus="this.select()"
-                                tabindex="110"
-                                type="number"
-                                step="0.01"
-                                min = "0"
-                                value="<?php print $totalDistance; ?>"
-                        >
-                    </p>
-
-                    <p>
-                        <label class="required">Hiking Duration (hh:mm:ss)</label>
-                        <input
-                            <?php if ($hikingTimeERROR)
-                                print 'class="mistake"'; ?>
-                                id="hr"
-                                name="HOURS"
-                                min="0"
-                                max="24"
-                                type="number"
-
-                                value="<?php print $HOURS; ?>"        >
-                        <label>:</label>
-                        <input
-                            <?php if ($hikingTimeERROR)
-                                print 'class="mistake"'; ?>
-                                id="min"
-                                name="MIN"
-                                min="0"
-                                max="60"
-                                type="number"
-                                value= "<?php print $MIN; ?>"
-                        >
-                        <label>:</label>
-                        <input
-                            <?php if ($hikingTimeERROR)
-                                print 'class="mistake"'; ?>
-                                id="sec"
-                                name="SEC"
-                                min="0"
-                                max="60"
-                                type="number"
-                                value="<?php print $SEC; ?>" >
-
-
-                    </p>
-
-
-
-                    <p>
-                        <label class="required">Height (ft)</label>
-                        <input
-                            <?php if ($verticalRiseERROR)
-                                print 'class="mistake"'; ?>
-                                id="txtVerticalRise"
-                                name="txtVerticalRise"
-                                tabindex="120"
-                                type="number"
-                                min = "0"
-                                max = "5000"
-                                value="<?php print $verticalRise; ?>"
-                        >
-                    </p>
-
-
-
-                    <p>
-                        <label class="required">Difficulty: </label>
-
-                        <input
-                            <?php if ($ratingERROR)
-                                print 'class="mistake"';
-                            ?>
-                                id="easy"
-                                name="txtRating"
-                                type="radio"
-                            <?php
-                            //if rating is Easy then make it sticky
-                            if($rating == "Easy")
-                                print "checked";
-                            ?>
-                                value="Easy"
-                        > <span>Easy</span>
-
-                        <input
-                            <?php if ($ratingERROR)
-                                print 'class="mistake"'; ?>
-                                id="moderate"
-                                name="txtRating"
-                                type="radio"
-                            <?php
-                            //if rating is Easy then make it sticky
-                            if($rating == "Moderate")
-                                print "checked";
-                            ?>
-                                value="Moderate"
-                        > <span>Moderate</span>
-
-                        <input
-                            <?php if ($ratingERROR)
-                                print 'class="mistake"'; ?>
-                                id="moderately-strenuous"
-                                name="txtRating"
-                                type="radio"
-                            <?php
-                            //if rating is Easy then make it sticky
-                            if($rating == "Moderately Strenuous")
-                                print "checked";
-                            ?>
-                                value="Moderately Strenuous"
-                        > <span>Moderately Strenuous</span>
-
-                        <input
-                            <?php if ($ratingERROR)
-                                print 'class="mistake"'; ?>
-                                id="strenuous"
-                                name="txtRating"
-                                type="radio"
-                            <?php
-                            //if rating is Easy then make it sticky
-                            if($rating == "Strenuous")
-                                print "checked";
-                            ?>
-                                value="Strenuous"
-                        > <span>Strenuous</span>
-
-                    </p>
-
-
-<p>
-    <label>Pick Applicable Tags: </label>
-                    <?php
-                    $i = 0;
-                    foreach($tagSet as $tag){
-                        //label, id, and name == spaces stripped and concatenated chk in begining of string
-                        print "\t" . '<label for="chk' . str_replace(" ", "", $tag["pmkTag"]) . '"><input type="checkbox" ';
-                        print ' id="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
-                        print ' name="chk' . str_replace(" ", "", $tag["pmkTag"]) . '" ';
-                        //Display default Checks
-                        if ($tag["fldBinary"]) {
-                            print ' checked ';
-                        }
-                        // the value is the index number of the $tag array
-                        print 'value="' . $i++ . '">' . $tag["pmkTag"];
-                        print '</label>';
-                    }
-                    ?>
-</p>
-
-
-                </fieldset>
-                <fieldset class="buttons">
-                    <input type="submit" id="btnSubmit" name="btnSubmit" value="Save" tabindex="900" class="button">
-                </fieldset> <!-- ends buttons -->
-            </form>
-            <?php
-        }
         }// end body submit
+        }//if Admin is true
+        else{
+            print '<p id = "NotPrivlaged"> YOU DO NOT HAVE ACCESS TO THIS</p>';
+        }
         ?>
     </article>
 </main>

@@ -38,5 +38,4 @@
     print '<body id="' . $PATH_PARTS['filename'] . '">';
     include 'header.php';
     include 'nav.php';
-    $isAdmin = true;
     ?>

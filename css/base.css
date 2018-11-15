@@ -189,7 +189,12 @@ input[type=checkbox], input[type=radio] {
     margin-top: 1px\9;
     line-height: normal;
 }
-
+#NotPrivlaged{
+    text-align: center;
+    font-size: 30px;
+    color: darkred;
+    font-weight: bolder;
+}
 article#main {
     color: aliceblue;
 }

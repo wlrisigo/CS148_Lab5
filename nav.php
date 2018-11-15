@@ -3,8 +3,9 @@
 <nav>
     <ol>
         <?php
+        $isAdmin = true;
         // This sets a class for current page so you can style it differently
-        $
+
         
         print '<li ';
         if ($PATH_PARTS['filename'] == 'index') {
@@ -12,18 +13,20 @@
         }
         print '><a href="index.php">Home</a></li>';
 
-        print '<li ';
-        if ($PATH_PARTS['filename'] == ' form-hiker-trails') {
-            print ' class="activePage" ';
-        }
-        print '><a href=" form-hiker-trails.php">Add Hike and Details</a></li>';
 
-        print '<li ';
-        if ($PATH_PARTS['filename'] == 'form-trails') {
-            print ' class="activePage" ';
+        if($isAdmin) {
+            print '<li ';
+            if ($PATH_PARTS['filename'] == ' form-hiker-trails') {
+                print ' class="activePage" ';
+            }
+            print '><a href=" form-hiker-trails.php">Add Hike and Details</a></li>';
+
+            print '<li ';
+            if ($PATH_PARTS['filename'] == 'form-trails') {
+                print ' class="activePage" ';
+            }
+            print '><a href="form-trails.php">Add Trails</a></li>';
         }
-        print '><a href="form-trails.php">Add Trails</a></li>';
-        
         print '<li ';
         if ($PATH_PARTS['filename'] == 'tables') {
             print ' class="activePage" ';
